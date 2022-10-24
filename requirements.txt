@@ -1,0 +1,9 @@
+Geometry3D
+shapely
+tqdm
+matplotlib
+scipy
+math
+cmath
+typing
+pathlib

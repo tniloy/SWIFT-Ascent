@@ -39,7 +39,7 @@ if saved_los_file.is_file():
 
 # In[3]:
 
-
+#Rishabh- Put in the requirements file
 get_ipython().system('pip install Geometry3D shapely')
 
 
@@ -52,7 +52,7 @@ from shapely import geometry
 
 # In[5]:
 
-
+#Rishabh- Put the file in solution. No hardcoding of paths.
 data = pd.read_csv("C:\\Users\\tniloy\\Downloads\\opencellid dataset\\310.csv", names=['radio', 'mcc', 'mnc', 'lac', 'cid', 'unit', 'longitude', 'latitude', 'range', 'samples', 'changeable', 'created', 'updated', 'averageSignal'])
 
 
@@ -109,7 +109,7 @@ len(data_within_zone)
 
 # In[11]:
 
-
+#Rishabh- Put the file in solution. No hardcoding of paths.
 import json
 with open ('C:\\Users\\tniloy\\Downloads\\export (1).geojson') as f:
     df=json.load(f)
@@ -1156,7 +1156,7 @@ plt.show()
 
 # In[ ]:
 
-
+#Rishabh-can install whole of matplotlib
 from matplotlib.lines import Line2D
 output= False
 bs_ue_max_radius = 1000
@@ -1276,7 +1276,7 @@ plt.show()
 
 # In[ ]:
 
-
+#Rishabh-can install whole of matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
  
