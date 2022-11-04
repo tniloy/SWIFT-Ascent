@@ -17,6 +17,9 @@ random.seed(10)
 
 # In[2]:
 
+def get_simulator_data(a):
+    return a+1
+
 
 import pickle
 from pathlib import Path
@@ -40,7 +43,7 @@ if saved_los_file.is_file():
 # In[3]:
 
 #Rishabh- Put in the requirements file
-get_ipython().system('pip install Geometry3D shapely')
+# get_ipython().system('pip install Geometry3D shapely')
 
 
 # In[4]:
