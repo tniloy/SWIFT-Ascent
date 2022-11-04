@@ -23,7 +23,7 @@ lines_per_file = len(lines)//divide_by
 for i in range(0, len(lines), lines_per_file):
     print(i)
     lines_to_write = lines[i:i+lines_per_file]
-    with open("data/splitted/split_csv_{}.csv".format(i), 'w', newline='') as csv_file:
+    with open("data/split_excel/split_csv_{}.csv".format(i), 'w', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
         for row in lines_to_write:
             csv_writer.writerow(row)
