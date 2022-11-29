@@ -20,9 +20,9 @@ random.seed(10)
 
 
 # In[2]:
-# To return simulator's data to main
-def get_simulator_data(a):
-    return a + 1
+# # To return simulator's data to main
+# def get_simulator_data(a):
+#     return a + 1
 
 
 # Structure: (theta, phi) -> (theta_etilt, phi_scan)
