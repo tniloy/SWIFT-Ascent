@@ -325,13 +325,13 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
     h = 5
     d_2D = math.sqrt(((FSS_X - BS_X) ** 2) + ((FSS_Y - BS_Y) ** 2) + ((FSS_Z - BS_Z) ** 2))
     hBs = 10
-    fc = 12e3
+    fc = 12
     d_3D = math.sqrt(hBs ** 2 + d_2D ** 2)
     PL1umi = 32.4 + 21 * math.log10(d_3D) + 20 * math.log10(fc)
 
     ##(D_BP<=d_2D)<=5000m:
     hBs = 10
-    hUT = 1.5
+    hUT = 4.5
     hE = 1
     hBs1 = hBs - hE
     hUT1 = hUT - hE
@@ -348,7 +348,7 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
 
     ##NLOS,SF=7.82:
     PL1umiNLOS = 35.3 * math.log10(d_3D) + 22.4 + 21.3 * math.log10(fc) - 0.3 * (hUT - 1.5)
-    PLUMiNLOS = max(PL2umi, PL1umiNLOS)
+    PLUMiNLOS = max(PLUMiLOS, PL1umiNLOS)
 
     line_of_sight = True
 
@@ -397,7 +397,7 @@ def path_loss_UMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
     ##LOS,SF=4:
     ##(10m<=d_2D)<=D_BP:
     # RR - these variables needed as input
-    fc = 12e3
+    fc = 12
     h = 5
     d_2D = math.sqrt(((FSS_X - BS_X) ** 2) + (FSS_Y - BS_Y) ** 2) + ((FSS_Z - BS_Z) ** 2)
     hBs = 25
@@ -405,7 +405,7 @@ def path_loss_UMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
     PL3uma = 28.0 + 22 * math.log10(d_3D) + 20 * math.log10(fc)
 
     ##(D_BP<=d_2D) <=5000m:
-    hUT = 1.5
+    hUT = 4.5
     hE = 1
     hBs1 = hBs - hE
     hUT1 = hUT - hE
@@ -422,7 +422,7 @@ def path_loss_UMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
 
     ##NLOS,SF=6:
     PL1NLOSuma = 13.54 + 39.08 * math.log10(d_3D) + 20 * math.log10(fc) - 0.6 * (hUT - 1.5)
-    PLUMANLOS = max(PL4uma, PL1NLOSuma)
+    PLUMANLOS = max(PLUMALOS, PL1NLOSuma)
 
     line_of_sight = True
 
@@ -479,7 +479,7 @@ def path_loss_RMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
     ##LOS,SF=4(PL1),SF=6(PL2)
     ##10m<=d_2D<=d_BP:
     # RR - these variables needed as input
-    fc = 12e3
+    fc = 12
     h = 5
     d_2D = math.sqrt(((FSS_X - BS_X) ** 2) + ((FSS_Y - BS_Y) ** 2) + ((FSS_Z - BS_Z) ** 2))
     hBs = 35
@@ -488,7 +488,7 @@ def path_loss_RMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
         0.044 * h ** 1.72, 14.77) + 0.002 * math.log10(h) * d_3D
 
     ##d_BP<=d_2D<=10km:
-    hUT = 1.5
+    hUT = 4.5
     c = 3 * 10 ** 8
     d_BP = (2 * math.pi * hBs * hUT * fc) / c
     PL2rma = PL1rma * (d_BP) + 40 * math.log10(d_3D / d_BP)
@@ -506,7 +506,7 @@ def path_loss_RMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z):
     PL1NLOSrma = 161.04 - 7.11 * math.log10(W) + 7.5 * math.log10(h) - (24.37 - 3.7 * (h / hBs) ** 2) * math.log10(
         hBs) + (43.42 - 3.1 * math.log10(hBs)) * (math.log10(d_3D) - 3) + 20 * math.log10(fc) - (
                              3.2 * (math.log10(11.75 * hUT)) ** 2 - 4.97)
-    PLRMANLOS = max(PL2rma, PL1NLOSrma)
+    PLRMANLOS = max(PLRMALOS, PL1NLOSrma)
 
     line_of_sight = True
 
