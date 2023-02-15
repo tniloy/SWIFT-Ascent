@@ -57,7 +57,7 @@ data.head(10)
 # center_x = 0
 # center_y = 0
 # center_z = 0
-# FSS POsition:
+# FSS Position:
 # RR - these variables needed as input
 lat_FSS = 37.20250
 lon_FSS = -80.43444
@@ -568,7 +568,7 @@ def Interface_UMi_1(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, FSS_phi, pathloss_UMi
     G_5G_R = gain_5g(theta_bs_es, phi_bs_es, theta_tilt, phi_scan)
     G_Rx_5G = gain_fss_wbes_b(fss_phi_difference)
 
-    TXPower = 41.3
+    TXPower = -6.77
     #         LBuildingLoss=1
     interface1 = TXPower + G_5G_R - pathloss_UMi - LBodyLoss + G_Rx_5G
     return interface1, pathloss_UMi
@@ -590,7 +590,7 @@ def Interface_UMa_1(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, FSS_phi, pathloss_UMa
     G_5G_R = gain_5g(theta_bs_es, phi_bs_es, theta_tilt, phi_scan)
     G_Rx_5G = gain_fss_wbes_b(fss_phi_difference)
 
-    TXPower = 41.3
+    TXPower = -6.77
     #         LBuildingLoss=1
     interface2 = TXPower + G_5G_R - pathloss_UMa - LBodyLoss + G_Rx_5G
     return interface2, pathloss_UMa
@@ -613,7 +613,7 @@ def Interface_RMa_1(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, FSS_phi, pathloss_RMa
     G_5G_R = gain_5g(theta_bs_es, phi_bs_es, theta_tilt, phi_scan)
     G_Rx_5G = gain_fss_wbes_b(fss_phi_difference)
 
-    TXPower = 41.3
+    TXPower =-6.77
     #         LBuildingLoss=1
     interface3 = TXPower + G_5G_R - pathloss_RMa - LBodyLoss + G_Rx_5G
     return interface3, pathloss_RMa
