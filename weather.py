@@ -59,15 +59,8 @@ name (string):
 import requests
 
 
-def get_weather(location, api_key):
-    if location.isdigit():
-        # location is a set of coordinates
-        lat, lon = map(float, location.split(','))
-        url = f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}'
-    else:
-        # location is a city name
-        url = f'https://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}'
-
+def get_weather_api(latitude, longitude, api_key='e7660ea6dbab337bee2f5b03497a496c'):
+    url = f'https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={api_key}'
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()
@@ -75,16 +68,13 @@ def get_weather(location, api_key):
         return None
 
 
-def main(api_key, location='New York'):
-    weather_info = get_weather(location, api_key)
+def get_weather(latitude, longitude):
+    weather_info = get_weather_api(latitude, longitude, api_key='e7660ea6dbab337bee2f5b03497a496c')
     if weather_info:
         # display some of the weather information
         print('Temperature:', weather_info['main']['temp'])
         print('Humidity:', weather_info['main']['humidity'])
         print('Weather:', weather_info['weather'][0]['description'])
+        return weather_info
     else:
-        print('Could not retrieve weather information for', location)
-
-
-if __name__ == '__main__':
-    main('e7660ea6dbab337bee2f5b03497a496c', 'New York')
+        print('Could not retrieve weather information for this location')
