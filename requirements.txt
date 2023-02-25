@@ -1,7 +1,7 @@
-Geometry3D
-shapely
+Geometry3D==0.2.4
+shapely==1.8.5.post1
 tqdm
-matplotlib
+matplotlib==3.3.4
 scipy
 typing
 pathlib

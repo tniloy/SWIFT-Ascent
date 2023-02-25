@@ -1,23 +1,26 @@
 #!/usr/bin/env python
-import math
-import random
-from typing import Tuple
-import pandas as pd
+import cmath
 import json
+import math
 import pickle
+import random
 from pathlib import Path
-import seaborn as sns
-import csv
-import math, cmath
-from scipy import optimize
-from matplotlib.lines import Line2D
+from typing import Tuple
+import matplotlib
 import matplotlib.pyplot as plt
+import base64
+import io
 import numpy as np
-from tqdm import tqdm
+import pandas as pd
 from Geometry3D import *
 from flask import Flask, request, jsonify
+from matplotlib.lines import Line2D
+from scipy import optimize
+from shapely import geometry
+from tqdm import tqdm
 from weather import get_weather
 
+matplotlib.use('Agg')
 
 def get_weather_json(latitude, longitude):
     weather_info = get_weather(f"{latitude},{longitude}")
@@ -368,9 +371,6 @@ def Interface_UMa_1(
     return interface2, pathloss_UMa
 
 
-# In[ ]:
-
-
 def Interface_RMa_1(
         BS_X,
         BS_Y,
@@ -412,10 +412,13 @@ def simulate(output=True, ctx=None):
     x = ctx.x
     y = ctx.y
     z = ctx.z
+    FSS_phi = ctx.FSS_phi
+    Noise_W = ctx.Noise_W
     data_within_zone = ctx.data_within_zone
     base_station_count = ctx.base_station_count
     radius = ctx.radius
     R = ctx.R
+
     for i in range(1):
         FSS_X = np.append(FSS_X, x)
         FSS_Y = np.append(FSS_Y, y)
@@ -460,6 +463,11 @@ def simulate(output=True, ctx=None):
         x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
         y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
         #         z_BS = R * math.sin(math.radians(lat_BS))
+
+        x_FSS = ctx.x_FSS
+        y_FSS = ctx.y_FSS
+        bs_ue_min_radius = ctx.bs_ue_min_radius
+        bs_ue_max_radius = ctx.bs_ue_max_radius
 
         BS_X = np.append(BS_X, x_BS - x_FSS)
         BS_Y = np.append(BS_Y, y_BS - y_FSS)
@@ -631,7 +639,7 @@ def simulate(output=True, ctx=None):
                         print("theta_bs_ue:", theta_bs_ue, "phi_bs_ue:", phi_bs_ue)
 
                     theta_tilt, phi_scan = max_gain_5g_parameters(
-                        theta_bs_ue, phi_bs_ue
+                        theta_bs_ue, phi_bs_ue, ctx
                     )
 
                     if interference_type == "UMi":
@@ -737,16 +745,22 @@ def simulate(output=True, ctx=None):
 
 
 def gain_antenna_element_horizontal(phi) -> float:
+    phi_3db = 80  # degrees
+    front_to_back_ratio = 30  # dB
     return -min(12 * (phi / phi_3db) ** 2, front_to_back_ratio)
 
 
 # antenna vertical pattern
 def gain_antenna_element_vertical(theta) -> float:
+    theta_3db = 65  # degrees
+    side_lobe_level_limit = 30  # dB
     return -min(12 * ((theta - 90) / theta_3db) ** 2, side_lobe_level_limit)
 
 
 # antenna element gain of elevation and azimuth plane
 def gain_antenna_element(theta, phi) -> float:
+    front_to_back_ratio = 30  # dB
+    antenna_gain_max = 8
     return antenna_gain_max - min(
         -(gain_antenna_element_horizontal(phi) + gain_antenna_element_vertical(theta)),
         front_to_back_ratio,
@@ -770,7 +784,7 @@ def superposition(n, m, theta, phi, hspace, vspace) -> complex:
     )
 
 
-def weighting(n, m, theta_tilt, phi_scan, hspace, vspace) -> complex:
+def weighting(n, m, theta_tilt, phi_scan, hspace, vspace, rows, cols) -> complex:
     return cmath.exp(
         complex(
             0,
@@ -788,7 +802,8 @@ def weighting(n, m, theta_tilt, phi_scan, hspace, vspace) -> complex:
 
 
 # returns theta_tilt and phi_scan which yield maximum antenna gain given theta and phi
-def max_gain_5g_parameters(theta, phi, coarse=True, rounding_precision=0) -> tuple:
+def max_gain_5g_parameters(theta, phi, ctx, coarse=True, rounding_precision=0) -> tuple:
+    saved_tp = ctx.saved_tp
     if coarse:
         theta = round(theta, rounding_precision)
         phi = round(phi, rounding_precision)
@@ -813,12 +828,16 @@ def max_gain_5g_parameters(theta, phi, coarse=True, rounding_precision=0) -> tup
 # a_A, the directional pattern from beam forming with an array of elements
 def beam_pattern_5g(theta, phi, theta_tilt, phi_scan) -> float:
     summation = 0
+    rows = 16  # Nv
+    cols = 16  # Nh
+    hspace = 0.5  # dh/λ
+    vspace = 0.5  # dv/λ
     # weighting multiplied by the superposition vector
     for n in range(1, rows + 1):
         for m in range(1, cols + 1):
             # print(f"{theta_tilt}, {phi_scan}, {abs(weighting(n, m, theta_tilt, phi_scan, hspace, vspace))}")
             summation += weighting(
-                n, m, theta_tilt, phi_scan, hspace, vspace
+                n, m, theta_tilt, phi_scan, hspace, vspace, rows, cols
             ) * superposition(n, m, theta, phi, hspace, vspace)
 
     return abs(summation) ** 2
@@ -901,6 +920,13 @@ class Building:
         x_coord = np.array([])
         y_coord = np.array([])
         z_coord = np.array([])
+
+        lat_FSS = 37.20250
+        lon_FSS = -80.43444
+        R = 6.371e6  # Radius of the earth
+
+        x_FSS = R * math.cos(math.radians(lat_FSS)) * math.cos(math.radians(lon_FSS))
+        y_FSS = R * math.cos(math.radians(lat_FSS)) * math.sin(math.radians(lon_FSS))
 
         # bottom points of building at each coordinate
         for lon, lat in self.coordinates:
@@ -1075,6 +1101,18 @@ def parse_simulator_data():
     return jsonify(output_data)
 
 
+def get_plot():
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    # Encode the contents of the buffer as a base64 string
+    buffer.seek(0)
+    contents = buffer.getvalue()
+    encoded = base64.b64encode(contents).decode('utf-8')
+    # Embed the base64-encoded string in an HTML image tag
+    image_html = f'<img src="data:image/png;base64,{encoded}">'
+    return image_html
+
+
 random.seed(10)
 
 
@@ -1083,6 +1121,7 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
     saved_tp_file = Path("t0p0.pkl")
+    ctx = Context()
     if saved_tp_file.is_file():
         with open(saved_tp_file, "rb") as f:
             saved_tp = pickle.load(f)
@@ -1120,6 +1159,10 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     y_FSS = R * math.cos(math.radians(lat_FSS)) * math.sin(math.radians(lon_FSS))
     z_FSS = R * math.sin(math.radians(lat_FSS))
 
+    ctx.x_FSS = x_FSS
+    ctx.y_FSS = y_FSS
+    ctx.z_FSS = z_FSS
+
     print("X, Y, Z = " + str([x_FSS, y_FSS, z_FSS]))
     radius = 5000  # radius of the inclusion zone
 
@@ -1149,12 +1192,14 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     )
     x, y = b.xy_polygon.boundary.xy
     plt.plot(x, y)
+    html1 = get_plot()
+
     r = Renderer(backend="matplotlib")
     for p in b.wall_polygons:
         r.add((p, "b", 1), normal_length=0)
     r.show()
-
-    ctx = Context()
+    # https://htmlcodeeditor.com/
+    htmlpolygon = get_plot()
 
     buildings = []
     for i in tqdm(range(len(data1))):
@@ -1181,36 +1226,24 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     base_station_count = 33
 
     ctx.base_station_count = base_station_count
-
+    ctx.bs_ue_min_radius = bs_ue_min_radius
+    ctx.bs_ue_max_radius = bs_ue_max_radius
+    ctx.Noise_W = Noise_W
     fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
     x, y, z = 0, 0, 0
     ctx.x = x
     ctx.y = y
     ctx.z = z
-    ctx.data_within_zone=data_within_zone
+    ctx.data_within_zone = data_within_zone
+    ctx.saved_tp = saved_tp
     FSS_phi = {"UMi": 15, "UMa": 48, "RMa": 5}
+    ctx.FSS_phi = FSS_phi
     # Prototype functions to calculate antenna gain of 5G base station and FSS earth station
-
-    # gain is in dBi
-    # 3GPP TR 38.901
     # https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.00.00_60/tr_138901v140000p.pdf
-    antenna_gain_max = 8
-
     # values recommended by Dr. Zoheb
-    rows = 16  # Nv
-    cols = 16  # Nh
-    hspace = 0.5  # dh/λ
-    vspace = 0.5  # dv/λ
-
     # constant values based on ECC Rep 281
-    phi_3db = 80  # degrees
-    theta_3db = 65  # degrees
-    front_to_back_ratio = 30  # dB
-    side_lobe_level_limit = 30  # dB
 
     # antenna horizontal pattern
-
-    # In[ ]:
 
     (
         distance_RMa,
@@ -1234,7 +1267,7 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
             distance_UMi_single,
             I_N_UMi_single_W,
             line_of_sight_single,
-        ) = simulate(output=False, context=ctx)
+        ) = simulate(output=False, ctx=ctx)
 
         distance_RMa = np.append(distance_RMa, distance_RMa_single)
         # print(I_N_RMa_single_W)
@@ -1270,78 +1303,71 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
         "UMi": (distance_UMi, I_N_UMi_noAverage),
     }
 
-    # In[ ]:
-
     with open(saved_tp_file, "wb") as f:
         pickle.dump(saved_tp, f)
     with open(saved_los_file, "wb") as f:
         pickle.dump(saved_los, f)
 
-    # In[ ]:
-
     len(pairs_noAverage["RMa"][0])
-
-    # In[ ]:
 
     len(pairs_noAverage["RMa"][1])
 
-    # In[ ]:
-
     for key in pairs:
         plt.scatter(pairs[key][0], pairs[key][1], label=key)
-
     plt.title("Average I/N Vs Distance graph")
     plt.xlabel("Distance (meter)")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
-
-    # In[ ]:
+    html2 = get_plot()
 
     for key in pairs_noAverage:
         plt.scatter(pairs_noAverage[key][0], pairs_noAverage[key][1], label=key)
-
     plt.title("I/N Vs Distance graph")
     plt.xlabel("Distance (meter)")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
+    html3 = get_plot()
+    # plt.show()
 
     # In[ ]:
 
     distance, interface_Noise = pairs_noAverage["RMa"]
     distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
-    plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
 
+    x = np.array(distance_sorted)
+    y = np.array(interface_Noise_sorted)
+
+    plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
     plt.title("I/N Vs Distance graph (RMa)")
     plt.xlabel("Distance (meter)")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
+    html4 = get_plot()
+    # plt.show()
 
     # In[ ]:
 
     distance, interface_Noise = pairs_noAverage["UMa"]
     distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
     plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
-
     plt.title("I/N Vs Distance graph (UMa)")
     plt.xlabel("Distance (meter)")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
+    html5 = get_plot()
+    # plt.show()
 
     # In[ ]:
 
     distance, interface_Noise = pairs_noAverage["UMi"]
     distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
     plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
-
     plt.title("I/N Vs Distance graph (UMi)")
     plt.xlabel("Distance (meter)")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
+    html6 = get_plot()
+    # plt.show()
 
     # In[ ]:
 
@@ -1361,18 +1387,12 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
         plt.plot(
             np.array(distance_sorted), np.polyval(coefficients, distance_sorted), label=key
         )
-
     plt.title("I/N Vs Distance graph")
     plt.xlabel("Distance (meter)")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
-
-    # In[ ]:
-
-    # Rishabh-can install whole of matplotlib
-
-    # RR - these variables needed as input
+    html7 = get_plot()
+    # plt.show()
     output = False
     bs_ue_max_radius = 1000
     bs_ue_min_radius = 1
@@ -1513,14 +1533,12 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     ]
 
     plt.legend(handles=legend_handles)
-
-    # plt.legend(loc=2)
     plt.title("FSS, BS and UE Location plot")
     ax.set_xlabel("X Label")
     ax.set_ylabel("Y Label")
-
     # fig.savefig('graphcoex.pdf', dpi=100)
-    plt.show()
+    html8 = get_plot()
+    # plt.show()
 
     # Creating dataset
     box_dict_UMi = dict()
@@ -1535,14 +1553,13 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     # Creating plot
     keys = sorted([key for key in box_dict_UMi])
     plt.boxplot([box_dict_UMi[key] for key in keys])
-    # ax.set_xticklabels(keys)
-
     plt.title("I/N Vs Distance graph (UMi)")
     plt.xlabel("No. Of BS")
     plt.ylabel("I/N (db)")
     plt.legend()
     # show plot
-    plt.show()
+    html9 = get_plot()
+    # plt.show()
     # plt.save
     # Creating dataset
     box_dict_UMa = dict()
@@ -1551,6 +1568,7 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
         if distance[i] not in box_dict_UMa:
             box_dict_UMa[distance[i]] = []
         box_dict_UMa[distance[i]].append(interface_Noise[i])
+
     fig = plt.figure(figsize=(10, 7))
     # Creating plot
     keys = sorted([key for key in box_dict_UMa])
@@ -1559,7 +1577,8 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     plt.xlabel("No. Of BS")
     plt.ylabel("I/N (db)")
     plt.legend()
-    plt.show()
+    html10 = get_plot()
+    # plt.show()
     # Creating dataset
     box_dict_RMa = dict()
     distance, interface_Noise = pairs_noAverage["RMa"]
@@ -1575,10 +1594,8 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     plt.xlabel("No. of BS")
     plt.ylabel("I/N (db)")
     plt.legend()
-    # show plot
+    html11 = get_plot()
     # plt.show()
-    # show plot
-    plt.show()
     box_dict_UMi
     # Creating dataset
     box_dict_UMi = dict()
@@ -1588,63 +1605,26 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
             box_dict_UMi[distance[i]] = []
         box_dict_UMi[distance[i]].append(interface_Noise[i])
     fig = plt.figure(figsize=(10, 7))
+    plt.switch_backend('TkAgg')
     # Creating plot
     keys = sorted([key for key in box_dict_UMi])
     plt.boxplot([box_dict_UMi[key] for key in keys][0])
     # show plot
-    plt.show()
-
-    # In[ ]:
-
-    # # Creating dataset
-    # box_dict_UMi = dict()
-    # distance, interface_Noise = pairs_noAverage['UMi']
-    # for i in range(len(interface_Noise)):
-    #     if distance[i] not in box_dict_UMi:
-    #         box_dict_UMi[distance[i]] = []
-    #     box_dict_UMi[distance[i]].append(interface_Noise[i])
-
-    # elevation_dict_UMi = dict()
-
-    # for p in range (len(BS_X)):
-    #     x, y, z = BS_X[p]-FSS_X[0], BS_Y[p]-FSS_Y[0], 10-FSS_Z[0]
-
-    #     distance_2D = math.sqrt(((FSS_X[0]-BS_X[p])**2)+((FSS_Y[0]- BS_Y[p])**2)+((FSS_Z[0]-10)**2))
-
-    #     theta_bs_es = math.degrees(math.atan(y/x)) % 360
-    #     phi_bs_es = math.degrees(math.sqrt(x**2 + y**2) / z) % 360
-    #     fss_phi_difference = abs(15 - phi_bs_es)
-
-    #     if distance_2D in box_dict_UMi:
-    #         elevation_dict_UMi[fss_phi_difference] = box_dict_UMi[distance_2D]
-
-    # plt.title('I/N Vs Elevation graph (UMi)')
-    # plt.xlabel('Elevation (degrees)')
-    # plt.ylabel('I/N (db)')
-    # plt.legend()
+    html12 = get_plot()
     # plt.show()
-
-    # In[ ]:
-
-    # elevation_dict_UMi
-
-    # In[ ]:
-
     # Elevation angles (FSS towards to sky )
     fig, ax = plt.subplots()
     FSS_phi = {"UMi": 15, "UMa": 48, "RMa": 5}
     contexts = sorted([context for context in FSS_phi], key=lambda x: FSS_phi[x])
     boxplots = []
     boxplots = ax.boxplot([pairs_noAverage[context][1] for context in contexts])
-    # for context in contexts:
-    #     distance, interface_Noise = pairs_noAverage[context]
-    #     boxplots.append(plt.boxplot(interface_Noise))
     ax.set_xticklabels([FSS_phi[context] for context in contexts])
     ax.set_title("I/N Vs Elevation graph")
     ax.set_xlabel("Elevation (degrees)")
     ax.set_ylabel("I/N (db)")
     ax.legend()
-    plt.show()
+    html13 = get_plot()
+    # plt.show()
     line_of_sight
     # Creating dataset
     box_dict_UMi = dict()
@@ -1680,15 +1660,12 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     ax.set_xlabel("Distnace of Each BS to FSS (meters)")
     ax.set_ylabel("I/N (db)")
     ax.legend()
-
     # show plot
     # plt.show()
     fig.set_size_inches(18, 8.5)
     # fig.savefig('graphUmi.pdf', dpi=100)
-    plt.show()
-
-    # In[ ]:
-
+    html14 = get_plot()
+    # plt.show()
     # Creating dataset
     box_dict_UMa = dict()
     distance, interface_Noise = pairs_noAverage["UMa"]
@@ -1728,10 +1705,9 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     # plt.show()
     fig.set_size_inches(18, 8.5)
     # fig.savefig('graphUMa.pdf', dpi=100)
-    plt.show()
+    html15 = get_plot()
 
-    # In[ ]:
-
+    # plt.show()
     # Creating dataset
     box_dict_RMa = dict()
     distance, interface_Noise = pairs_noAverage["RMa"]
@@ -1767,9 +1743,12 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     # plt.show()
     fig.set_size_inches(18, 8.5)
     # fig.savefig('graphRma.pdf', dpi=100)
-    plt.show()
+    html16 = get_plot()
+    # plt.show()
     return output
 
 
 if __name__ == '__main__':
-    app.run()
+    # Use a self-signed certificate for testing purposes
+    context = ('cert.pem', 'key.pem')
+    app.run(debug=True, ssl_context=context)
