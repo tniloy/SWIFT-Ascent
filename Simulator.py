@@ -459,7 +459,7 @@ def simulate(output=True, ctx=None):
             data_within_zone.iloc[i]["latitude"],
             data_within_zone.iloc[i]["longitude"],
         )
-        bs1 = BS(radius, max_height=35, carr_freq=12e3, interference_type=None)
+        # bs1 = BS(radius, max_height=35, carr_freq=12e3, interference_type=None)
         x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
         y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
         #         z_BS = R * math.sin(math.radians(lat_BS))
@@ -471,9 +471,9 @@ def simulate(output=True, ctx=None):
 
         BS_X = np.append(BS_X, x_BS - x_FSS)
         BS_Y = np.append(BS_Y, y_BS - y_FSS)
-        BS_Z = np.append(BS_Z, 0)
+        BS_Z = np.append(BS_Z, 10)
         if output:
-            print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
+            print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS))
 
     if output:
         print(BS_X, BS_Y, BS_Z)
@@ -524,8 +524,6 @@ def simulate(output=True, ctx=None):
                         + str(x1)
                         + ","
                         + str(y1)
-                        + ","
-                        + str(z1)
                         + ", channel: "
                         + str(channel)
                     )
@@ -641,6 +639,7 @@ def simulate(output=True, ctx=None):
                     theta_tilt, phi_scan = max_gain_5g_parameters(
                         theta_bs_ue, phi_bs_ue, ctx
                     )
+                    theta_tilt = 10
 
                     if interference_type == "UMi":
                         interfaceumi, pathloss_UMi_x = Interface_UMi_1(
@@ -656,55 +655,57 @@ def simulate(output=True, ctx=None):
                             phi_scan,
                         )
                         if output:
-                            print(
-                                "interference umi:",
-                                interfaceumi,
-                                "pathloss:",
-                                pathlossumi,
-                            )
+                            print("UE:", k, "/ interference umi:", interfaceumi, "/ pathloss:", pathlossumi)
+                        # if output:
+                        #     print(
+                        #         "interference umi:",
+                        #         interfaceumi,
+                        #         "pathloss:",
+                        #         pathlossumi,
+                        #     )
                         interface_UMi_BS = np.append(interface_UMi_BS, interfaceumi)
-                    elif interference_type == "UMa":
-                        interfaceuma, pathloss_UMa_x = Interface_UMa_1(
-                            BS_X[i],
-                            BS_Y[i],
-                            BS_Z[i],
-                            FSS_X[j],
-                            FSS_Y[j],
-                            FSS_Z[j],
-                            FSS_phi["UMa"],
-                            pathloss_UMa[i * len(FSS_X) + j],
-                            theta_tilt,
-                            phi_scan,
-                        )
-                        if output:
-                            print(
-                                "interference uma:",
-                                interfaceuma,
-                                "pathloss:",
-                                pathlossuma,
-                            )
-                        interface_UMa_BS = np.append(interface_UMa_BS, interfaceuma)
-                    elif interference_type == "RMa":
-                        interfacerma, pathloss_RMa_x = Interface_RMa_1(
-                            BS_X[i],
-                            BS_Y[i],
-                            BS_Z[i],
-                            FSS_X[j],
-                            FSS_Y[j],
-                            FSS_Z[j],
-                            FSS_phi["RMa"],
-                            pathloss_RMa[i * len(FSS_X) + j],
-                            theta_tilt,
-                            phi_scan,
-                        )
-                        if output:
-                            print(
-                                "interference rma:",
-                                interfacerma,
-                                "pathloss:",
-                                pathlossrma,
-                            )
-                        interface_RMa_BS = np.append(interface_RMa_BS, interfacerma)
+                    # elif interference_type == "UMa":
+                    #     interfaceuma, pathloss_UMa_x = Interface_UMa_1(
+                    #         BS_X[i],
+                    #         BS_Y[i],
+                    #         BS_Z[i],
+                    #         FSS_X[j],
+                    #         FSS_Y[j],
+                    #         FSS_Z[j],
+                    #         FSS_phi["UMa"],
+                    #         pathloss_UMa[i * len(FSS_X) + j],
+                    #         theta_tilt,
+                    #         phi_scan,
+                    #     )
+                    #     if output:
+                    #         print(
+                    #             "interference uma:",
+                    #             interfaceuma,
+                    #             "pathloss:",
+                    #             pathlossuma,
+                    #         )
+                    #     interface_UMa_BS = np.append(interface_UMa_BS, interfaceuma)
+                    # elif interference_type == "RMa":
+                    #     interfacerma, pathloss_RMa_x = Interface_RMa_1(
+                    #         BS_X[i],
+                    #         BS_Y[i],
+                    #         BS_Z[i],
+                    #         FSS_X[j],
+                    #         FSS_Y[j],
+                    #         FSS_Z[j],
+                    #         FSS_phi["RMa"],
+                    #         pathloss_RMa[i * len(FSS_X) + j],
+                    #         theta_tilt,
+                    #         phi_scan,
+                    #     )
+                    #     if output:
+                    #         print(
+                    #             "interference rma:",
+                    #             interfacerma,
+                    #             "pathloss:",
+                    #             pathlossrma,
+                    #         )
+                    #     interface_RMa_BS = np.append(interface_RMa_BS, interfacerma)
         interface_UMi_W = np.append(
             interface_UMi_W, np.sum(10 ** (interface_UMi_BS / 10))
         )
@@ -879,7 +880,7 @@ def gain_fss_s1428(phi, phi_min) -> float:
 # https://www.etsi.org/deliver/etsi_en/303900_303999/303981/01.02.01_60/en_303981v010201p.pdf
 def gain_fss_wbes_b(phi) -> float:
     if 0 <= phi < 6:
-        return 0
+        return 20
     elif 6 <= phi < 48:
         return 40 - 25 * math.log10(phi)
     elif 48 <= phi <= 180:
@@ -1077,25 +1078,24 @@ def parse_simulator_data():
     json_data = request.get_json()
 
     # Parse the JSON data to variables
-    fss_pos = json_data['fss_pos']
-    mbs_pos = json_data['mbs_pos']
-    building_locs = json_data['building_locs']
+    # fss_pos = json_data['fss_pos']
+    # mbs_pos = json_data['mbs_pos']  #mbs position not required to send. It is doing nothing.
+    # building_locs = json_data['building_locs']
     radius = json_data['radius']
-    pathloss_vals = json_data['pathloss_vals']
-    bs_channel = json_data['bs_channel']
-    fss_channel = json_data['fss_channel']
-    bs_heights = json_data['bs_heights']
-    tx_power = json_data['tx_power']
+    # pathloss_vals = json_data['pathloss_vals']
+    # bs_channel = json_data['bs_channel']
+    # fss_channel = json_data['fss_channel']
+    # bs_heights = json_data['bs_heights']
+    # tx_power = json_data['tx_power']
+    simulation_count = json_data['simulation_count']
     bs_ue_max_radius = json_data['bs_ue_max_radius']
     bs_ue_min_radius = json_data['bs_ue_min_radius']
     base_station_count = json_data['base_station_count']
-    bs_fss_gain = json_data['bs_fss_gain']
-    fss_bs_gain = json_data['fss_bs_gain']
+    # bs_fss_gain = json_data['bs_fss_gain']
+    # fss_bs_gain = json_data['fss_bs_gain']
 
     # Run the simulator with the parsed data
-    output_data = run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_channel, fss_channel,
-                                bs_heights, tx_power, bs_ue_max_radius, bs_ue_min_radius, base_station_count,
-                                bs_fss_gain, fss_bs_gain)
+    output_data = run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count)
 
     # Return the output as a JSON response
     return jsonify(output_data)
@@ -1116,8 +1116,7 @@ def get_plot():
 random.seed(10)
 
 
-def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_channel, fss_channel, bs_heights, tx_power,
-                  bs_ue_max_radius, bs_ue_min_radius, base_station_count, bs_fss_gain, fss_bs_gain):
+def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count):
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
     saved_tp_file = Path("t0p0.pkl")
@@ -1164,7 +1163,7 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     ctx.z_FSS = z_FSS
 
     print("X, Y, Z = " + str([x_FSS, y_FSS, z_FSS]))
-    radius = 5000  # radius of the inclusion zone
+    # radius = 5000  # radius of the inclusion zone
 
     latitude_range = radius / 110574
     longitude_range = radius / (111320 * math.cos(math.radians(latitude_range)))
@@ -1221,9 +1220,9 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     print("Noise:", Noise)
     print("Noise in Watts:", Noise_W)
 
-    bs_ue_max_radius = 1000
-    bs_ue_min_radius = 1
-    base_station_count = 33
+    # bs_ue_max_radius = 1000
+    # bs_ue_min_radius = 1
+    # base_station_count = 33
 
     ctx.base_station_count = base_station_count
     ctx.bs_ue_min_radius = bs_ue_min_radius
@@ -1257,7 +1256,7 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
         I_N_UMi_noAverage,
         line_of_sight,
     ) = [np.empty([0]) for x in range(10)]
-    simulation_count = 10
+    # simulation_count = 1
     for i in tqdm(range(simulation_count)):
         (
             distance_RMa_single,
@@ -1268,6 +1267,7 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
             I_N_UMi_single_W,
             line_of_sight_single,
         ) = simulate(output=False, ctx=ctx)
+        print(f"The current simulation is {i} out of total {simulation_count}")
 
         distance_RMa = np.append(distance_RMa, distance_RMa_single)
         # print(I_N_RMa_single_W)
@@ -1394,9 +1394,9 @@ def run_simulator(fss_pos, mbs_pos, building_locs, radius, pathloss_vals, bs_cha
     html7 = get_plot()
     # plt.show()
     output = False
-    bs_ue_max_radius = 1000
-    bs_ue_min_radius = 1
-    base_station_count = 33
+    # bs_ue_max_radius = 1000
+    # bs_ue_min_radius = 1
+    # base_station_count = 33
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
