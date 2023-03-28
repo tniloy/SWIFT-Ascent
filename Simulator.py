@@ -586,8 +586,8 @@ def simulate(output=True, ctx=None):
         interface_RMa_BS = np.empty([0])
         for j in range(len(FSS_X)):
             if output:
-                print(f"BS {i}, FSS {j}, pathloss {i * len(FSS_X) + j}")
-            for k in range(len(UE_X)):
+                if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i*len(FSS_X)+j]}")
+            for k in random.sample(range(len(UE_X)), 30):
                 # channel check
                 # if UE is using channel 1, the start is 12.2GHz and the end is 12.3GHz
                 bs_channel_start, bs_channel_end = BS_Channels.getChannelRange(
@@ -1313,86 +1313,86 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
 
     len(pairs_noAverage["RMa"][1])
 
-    for key in pairs:
-        plt.scatter(pairs[key][0], pairs[key][1], label=key)
-    plt.title("Average I/N Vs Distance graph")
-    plt.xlabel("Distance (meter)")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html2 = get_plot()
+    # for key in pairs:
+    #     plt.scatter(pairs[key][0], pairs[key][1], label=key)
+    # plt.title("Average I/N Vs Distance graph")
+    # plt.xlabel("Distance (meter)")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html2 = get_plot()
 
-    for key in pairs_noAverage:
-        plt.scatter(pairs_noAverage[key][0], pairs_noAverage[key][1], label=key)
-    plt.title("I/N Vs Distance graph")
-    plt.xlabel("Distance (meter)")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html3 = get_plot()
-    # plt.show()
-
-    # In[ ]:
-
-    distance, interface_Noise = pairs_noAverage["RMa"]
-    distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
-
-    x = np.array(distance_sorted)
-    y = np.array(interface_Noise_sorted)
-
-    plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
-    plt.title("I/N Vs Distance graph (RMa)")
-    plt.xlabel("Distance (meter)")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html4 = get_plot()
-    # plt.show()
+    # for key in pairs_noAverage:
+    #     plt.scatter(pairs_noAverage[key][0], pairs_noAverage[key][1], label=key)
+    # plt.title("I/N Vs Distance graph")
+    # plt.xlabel("Distance (meter)")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html3 = get_plot()
+    # # plt.show()
 
     # In[ ]:
 
-    distance, interface_Noise = pairs_noAverage["UMa"]
-    distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
-    plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
-    plt.title("I/N Vs Distance graph (UMa)")
-    plt.xlabel("Distance (meter)")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html5 = get_plot()
-    # plt.show()
+    # distance, interface_Noise = pairs_noAverage["RMa"]
+    # distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
+    #
+    # x = np.array(distance_sorted)
+    # y = np.array(interface_Noise_sorted)
+    #
+    # plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
+    # plt.title("I/N Vs Distance graph (RMa)")
+    # plt.xlabel("Distance (meter)")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html4 = get_plot()
+    # # plt.show()
 
     # In[ ]:
 
-    distance, interface_Noise = pairs_noAverage["UMi"]
-    distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
-    plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
-    plt.title("I/N Vs Distance graph (UMi)")
-    plt.xlabel("Distance (meter)")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html6 = get_plot()
-    # plt.show()
+    # distance, interface_Noise = pairs_noAverage["UMa"]
+    # distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
+    # plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
+    # plt.title("I/N Vs Distance graph (UMa)")
+    # plt.xlabel("Distance (meter)")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html5 = get_plot()
+    # # plt.show()
 
     # In[ ]:
 
-    for key in pairs_noAverage:
-        distance, interface_Noise = pairs_noAverage[key]
-        distance_1D = np.array([])
-        for arr in distance:
-            distance_1D = np.append(distance_1D, arr)
-        interface_Noise_1D = np.array([])
-        for arr in interface_Noise:
-            interface_Noise_1D = np.append(interface_Noise_1D, arr)
-        distance_sorted, interface_Noise_sorted = zip(
-            *sorted(zip(distance_1D, interface_Noise_1D))
-        )
-        coefficients = np.polyfit(distance_sorted, interface_Noise_sorted, 1)
-        # y = ax + b, where y is the average of interface_Noise_sorted
-        plt.plot(
-            np.array(distance_sorted), np.polyval(coefficients, distance_sorted), label=key
-        )
-    plt.title("I/N Vs Distance graph")
-    plt.xlabel("Distance (meter)")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html7 = get_plot()
+    # distance, interface_Noise = pairs_noAverage["UMi"]
+    # distance_sorted, interface_Noise_sorted = zip(*sorted(zip(distance, interface_Noise)))
+    # plt.scatter(np.array(distance_sorted), np.array(interface_Noise_sorted))
+    # plt.title("I/N Vs Distance graph (UMi)")
+    # plt.xlabel("Distance (meter)")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html6 = get_plot()
+    # # plt.show()
+
+    # In[ ]:
+
+    # for key in pairs_noAverage:
+    #     distance, interface_Noise = pairs_noAverage[key]
+    #     distance_1D = np.array([])
+    #     for arr in distance:
+    #         distance_1D = np.append(distance_1D, arr)
+    #     interface_Noise_1D = np.array([])
+    #     for arr in interface_Noise:
+    #         interface_Noise_1D = np.append(interface_Noise_1D, arr)
+    #     distance_sorted, interface_Noise_sorted = zip(
+    #         *sorted(zip(distance_1D, interface_Noise_1D))
+    #     )
+    #     coefficients = np.polyfit(distance_sorted, interface_Noise_sorted, 1)
+    #     # y = ax + b, where y is the average of interface_Noise_sorted
+    #     plt.plot(
+    #         np.array(distance_sorted), np.polyval(coefficients, distance_sorted), label=key
+    #     )
+    # plt.title("I/N Vs Distance graph")
+    # plt.xlabel("Distance (meter)")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html7 = get_plot()
     # plt.show()
     output = False
     # bs_ue_max_radius = 1000
@@ -1445,14 +1445,14 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
             data_within_zone.iloc[i]["latitude"],
             data_within_zone.iloc[i]["longitude"],
         )
-        bs1 = BS(radius, max_height=35, carr_freq=12e3, interference_type=None)
+        # bs1 = BS(radius, max_height=35, carr_freq=12e3, interference_type=None)
         x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
         y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
         #         z_BS = R * math.sin(math.radians(lat_BS))
 
         BS_X = np.append(BS_X, x_BS - x_FSS)
         BS_Y = np.append(BS_Y, y_BS - y_FSS)
-        BS_Z = np.append(BS_Z, 0)
+        BS_Z = np.append(BS_Z, 10)
         if output:
             print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
 
@@ -1516,129 +1516,100 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
                     )
             if output:
                 print(UE_X, UE_Y, UE_Z)
-        ax.scatter(
-            UE_X,
-            UE_Y,
-            alpha=0.8,
-            s=30,
-            label="UE Location",
-            color="green",
-        )
 
-    ax.scatter(BS_X, BS_Y, alpha=0.8, s=30, label="BS Location", color="red")
-    ax.scatter(FSS_X, FSS_Y, alpha=0.8, s=30, label="FSS Location", color="yellow")
-    legend_handles = [
-        Line2D([0], [0], marker="o", color="w", label="UE Location", markerfacecolor="g"),
-        Line2D([0], [0], marker="o", color="w", label="BS Location", markerfacecolor="r"),
-        Line2D([0], [0], marker="o", color="w", label="FSS Location", markerfacecolor="y"),
-    ]
+        indices = np.array([i * 10 + j for i in range(0, len(UE_X) // 10 - 1, 3) for j in range(0, 10)])
+        ax.scatter([UE_X[i] for i in indices], [UE_Y[i] for i in indices], alpha=0.8, s=10, label='UE Location',
+                   color='green')
+        ax.scatter([UE_X[i + 10] for i in indices], [UE_Y[i + 10] for i in indices], alpha=0.8, s=10,
+                   label='UE Location', color='orange')
+        ax.scatter([UE_X[i + 20] for i in indices], [UE_Y[i + 20] for i in indices], alpha=0.8, s=10,
+                   label='UE Location', color='blue')
 
-    plt.legend(handles=legend_handles)
-    plt.title("FSS, BS and UE Location plot")
-    ax.set_xlabel("X Label")
-    ax.set_ylabel("Y Label")
+    ax.scatter(BS_X, BS_Y, alpha=0.8, s=70, label='BS Location', color='red', marker="^")
+    ax.scatter(FSS_X, FSS_Y, alpha=0.8, s=220, label='FSS Location', color='purple', marker="*")
+
+    legend_handles = [Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='green'),
+                      Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='orange'),
+                      Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='blue'),
+                      Line2D([0], [0], marker='^', color='w', label='BS Location', markerfacecolor='r'),
+                      Line2D([0], [0], marker='*', color='w', label='FSS Location', markerfacecolor='purple')]
+
+    plt.legend(handles=legend_handles, fontsize=7)
+
+    ax.set_xlabel('X-Coordinates(meter)', fontsize=10)
+    ax.set_ylabel('Y-Coordinates (meter)', fontsize=9)
+    # fig.savefig('Revisedgraphcoex2final.pdf', dpi=100)
+    # plt.show()
+    # plt.title("FSS, BS and UE Location plot")
     # fig.savefig('graphcoex.pdf', dpi=100)
     html8 = get_plot()
     # plt.show()
 
     # Creating dataset
-    box_dict_UMi = dict()
-    distance, interface_Noise = pairs_noAverage["UMi"]
-    for i in range(len(interface_Noise)):
-        if distance[i] not in box_dict_UMi:
-            box_dict_UMi[distance[i]] = []
-        box_dict_UMi[distance[i]].append(interface_Noise[i])
-
-    fig = plt.figure(figsize=(10, 7))
-
-    # Creating plot
-    keys = sorted([key for key in box_dict_UMi])
-    plt.boxplot([box_dict_UMi[key] for key in keys])
-    plt.title("I/N Vs Distance graph (UMi)")
-    plt.xlabel("No. Of BS")
-    plt.ylabel("I/N (db)")
-    plt.legend()
+    # box_dict_UMi = dict()
+    # distance, interface_Noise = pairs_noAverage["UMi"]
+    # for i in range(len(interface_Noise)):
+    #     if distance[i] not in box_dict_UMi:
+    #         box_dict_UMi[distance[i]] = []
+    #     box_dict_UMi[distance[i]].append(interface_Noise[i])
+    #
+    # fig = plt.figure(figsize=(10, 7))
+    #
+    # # Creating plot
+    # keys = sorted([key for key in box_dict_UMi])
+    # plt.boxplot([box_dict_UMi[key] for key in keys])
+    # plt.title("I/N Vs Distance graph (UMi)")
+    # plt.xlabel("No. Of BS")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
     # show plot
-    html9 = get_plot()
+    # html9 = get_plot()
     # plt.show()
     # plt.save
     # Creating dataset
-    box_dict_UMa = dict()
-    distance, interface_Noise = pairs_noAverage["UMa"]
-    for i in range(len(interface_Noise)):
-        if distance[i] not in box_dict_UMa:
-            box_dict_UMa[distance[i]] = []
-        box_dict_UMa[distance[i]].append(interface_Noise[i])
-
-    fig = plt.figure(figsize=(10, 7))
-    # Creating plot
-    keys = sorted([key for key in box_dict_UMa])
-    plt.boxplot([box_dict_UMa[key] for key in keys])
-    plt.title("I/N Vs Distance graph (UMa)")
-    plt.xlabel("No. Of BS")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html10 = get_plot()
+    # box_dict_UMa = dict()
+    # distance, interface_Noise = pairs_noAverage["UMa"]
+    # for i in range(len(interface_Noise)):
+    #     if distance[i] not in box_dict_UMa:
+    #         box_dict_UMa[distance[i]] = []
+    #     box_dict_UMa[distance[i]].append(interface_Noise[i])
+    #
+    # fig = plt.figure(figsize=(10, 7))
+    # # Creating plot
+    # keys = sorted([key for key in box_dict_UMa])
+    # plt.boxplot([box_dict_UMa[key] for key in keys])
+    # plt.title("I/N Vs Distance graph (UMa)")
+    # plt.xlabel("No. Of BS")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html10 = get_plot()
     # plt.show()
     # Creating dataset
-    box_dict_RMa = dict()
-    distance, interface_Noise = pairs_noAverage["RMa"]
-    for i in range(len(interface_Noise)):
-        if distance[i] not in box_dict_RMa:
-            box_dict_RMa[distance[i]] = []
-        box_dict_RMa[distance[i]].append(interface_Noise[i])
-    fig = plt.figure(figsize=(10, 7))
-    # Creating plot
-    keys = sorted([key for key in box_dict_RMa])
-    plt.boxplot([box_dict_RMa[key] for key in keys])
-    plt.title("I/N Vs Distance graph (RMa)")
-    plt.xlabel("No. of BS")
-    plt.ylabel("I/N (db)")
-    plt.legend()
-    html11 = get_plot()
-    # plt.show()
-    box_dict_UMi
-    # Creating dataset
-    box_dict_UMi = dict()
-    distance, interface_Noise = pairs_noAverage["UMi"]
-    for i in range(len(interface_Noise)):
-        if distance[i] not in box_dict_UMi:
-            box_dict_UMi[distance[i]] = []
-        box_dict_UMi[distance[i]].append(interface_Noise[i])
-    fig = plt.figure(figsize=(10, 7))
-    plt.switch_backend('TkAgg')
-    # Creating plot
-    keys = sorted([key for key in box_dict_UMi])
-    plt.boxplot([box_dict_UMi[key] for key in keys][0])
-    # show plot
-    html12 = get_plot()
-    # plt.show()
-    # Elevation angles (FSS towards to sky )
-    fig, ax = plt.subplots()
-    FSS_phi = {"UMi": 15, "UMa": 48, "RMa": 5}
-    contexts = sorted([context for context in FSS_phi], key=lambda x: FSS_phi[x])
-    boxplots = []
-    boxplots = ax.boxplot([pairs_noAverage[context][1] for context in contexts])
-    ax.set_xticklabels([FSS_phi[context] for context in contexts])
-    ax.set_title("I/N Vs Elevation graph")
-    ax.set_xlabel("Elevation (degrees)")
-    ax.set_ylabel("I/N (db)")
-    ax.legend()
-    html13 = get_plot()
-    # plt.show()
-    line_of_sight
+    # box_dict_RMa = dict()
+    # distance, interface_Noise = pairs_noAverage["RMa"]
+    # for i in range(len(interface_Noise)):
+    #     if distance[i] not in box_dict_RMa:
+    #         box_dict_RMa[distance[i]] = []
+    #     box_dict_RMa[distance[i]].append(interface_Noise[i])
+    # fig = plt.figure(figsize=(10, 7))
+    # # Creating plot
+    # keys = sorted([key for key in box_dict_RMa])
+    # plt.boxplot([box_dict_RMa[key] for key in keys])
+    # plt.title("I/N Vs Distance graph (RMa)")
+    # plt.xlabel("No. of BS")
+    # plt.ylabel("I/N (db)")
+    # plt.legend()
+    # html11 = get_plot()
+    # # plt.show()
+    # box_dict_UMi
     # Creating dataset
     box_dict_UMi = dict()
     distance, interface_Noise = pairs_noAverage["UMi"]
     for i in range(len(interface_Noise)):
         if distance[i] not in box_dict_UMi:
             box_dict_UMi[distance[i]] = []
-        box_dict_UMi[distance[i]].append([interface_Noise[i], line_of_sight[i]])
-
-    # print(box_dict_UMi)
-
+        box_dict_UMi[distance[i]].append([interface_Noise[i],line_of_sight[i]])
     fig, ax = plt.subplots()
-
     # Creating plot
     keys = sorted([key for key in box_dict_UMi])
     for i, key in enumerate(keys):
@@ -1646,108 +1617,159 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
         # print(key)
         # print(box_dict_UMi[key])
         line_of_sight1 = box_dict_UMi[key][0][1]
-        ax.boxplot(
-            [I_N for I_N, los in box_dict_UMi[key]],
-            patch_artist=True,
-            positions=[i],
-            boxprops=dict(facecolor="white", color="blue" if line_of_sight1 else "red"),
-        )
-
-    # keys = sorted([key for key in box_dict_UMi])
-    # ax.boxplot([box_dict_UMi[key] for key in keys])
-    ax.set_xticklabels([int(i) for i in keys])
-
-    ax.set_title("I/N Vs Distance graph (UMi)")
-    ax.set_xlabel("Distnace of Each BS to FSS (meters)")
-    ax.set_ylabel("I/N (db)")
-    ax.legend()
+        ax.boxplot([I_N for I_N, los in box_dict_UMi[key]],
+                   patch_artist=True,
+                   positions=[i],
+                   boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'))
+    custom_lines = [Line2D([0], [0], color='blue', lw=6),
+                    Line2D([0], [0], color='red', lw=6),
+                    Line2D([0], [0], color='black', linestyle='--', lw=6)]
+    ax.legend(custom_lines, ['LOS', 'NLOS'], fontsize=25)
+    ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=30)
+    ax.tick_params(axis='y', which='major', labelsize=30)
+    ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=40)
+    ax.set_ylabel('I/N (dB)', fontsize=40)
+    fig.set_size_inches(40, 10)
+    plt.tight_layout()
+    plt.switch_backend('TkAgg')
     # show plot
+    html12 = get_plot()
+    # # plt.show()
+    # Elevation angles (FSS towards to sky )
+    # fig, ax = plt.subplots()
+    # FSS_phi = {"UMi": 15, "UMa": 48, "RMa": 5}
+    # contexts = sorted([context for context in FSS_phi], key=lambda x: FSS_phi[x])
+    # boxplots = []
+    # boxplots = ax.boxplot([pairs_noAverage[context][1] for context in contexts])
+    # ax.set_xticklabels([FSS_phi[context] for context in contexts])
+    # ax.set_title("I/N Vs Elevation graph")
+    # ax.set_xlabel("Elevation (degrees)")
+    # ax.set_ylabel("I/N (db)")
+    # ax.legend()
+    # html13 = get_plot()
     # plt.show()
-    fig.set_size_inches(18, 8.5)
-    # fig.savefig('graphUmi.pdf', dpi=100)
-    html14 = get_plot()
-    # plt.show()
+    # line_of_sight
     # Creating dataset
-    box_dict_UMa = dict()
-    distance, interface_Noise = pairs_noAverage["UMa"]
-    for i in range(len(interface_Noise)):
-        if distance[i] not in box_dict_UMa:
-            box_dict_UMa[distance[i]] = []
-        box_dict_UMa[distance[i]].append([interface_Noise[i], line_of_sight[i]])
+    # box_dict_UMi = dict()
+    # distance, interface_Noise = pairs_noAverage["UMi"]
+    # for i in range(len(interface_Noise)):
+    #     if distance[i] not in box_dict_UMi:
+    #         box_dict_UMi[distance[i]] = []
+    #     box_dict_UMi[distance[i]].append([interface_Noise[i], line_of_sight[i]])
+    #
+    # # print(box_dict_UMi)
+    #
+    # fig, ax = plt.subplots()
+    #
+    # # Creating plot
+    # keys = sorted([key for key in box_dict_UMi])
+    # for i, key in enumerate(keys):
+    #     # key is distance
+    #     # print(key)
+    #     # print(box_dict_UMi[key])
+    #     line_of_sight1 = box_dict_UMi[key][0][1]
+    #     ax.boxplot(
+    #         [I_N for I_N, los in box_dict_UMi[key]],
+    #         patch_artist=True,
+    #         positions=[i],
+    #         boxprops=dict(facecolor="white", color="blue" if line_of_sight1 else "red"),
+    #     )
+    #
+    # # keys = sorted([key for key in box_dict_UMi])
+    # # ax.boxplot([box_dict_UMi[key] for key in keys])
+    # ax.set_xticklabels([int(i) for i in keys])
+    #
+    # ax.set_title("I/N Vs Distance graph (UMi)")
+    # ax.set_xlabel("Distnace of Each BS to FSS (meters)")
+    # ax.set_ylabel("I/N (db)")
+    # ax.legend()
+    # # show plot
+    # # plt.show()
+    # fig.set_size_inches(18, 8.5)
+    # # fig.savefig('graphUmi.pdf', dpi=100)
+    # html14 = get_plot()
+    # # plt.show()
+    # # Creating dataset
+    # box_dict_UMa = dict()
+    # distance, interface_Noise = pairs_noAverage["UMa"]
+    # for i in range(len(interface_Noise)):
+    #     if distance[i] not in box_dict_UMa:
+    #         box_dict_UMa[distance[i]] = []
+    #     box_dict_UMa[distance[i]].append([interface_Noise[i], line_of_sight[i]])
 
     # print(box_dict_UMi)
 
-    fig, ax = plt.subplots()
-
-    # Creating plot
-    keys = sorted([key for key in box_dict_UMa])
-    for i, key in enumerate(keys):
-        # key is distance
-        # print(key)
-        # print(box_dict_UMi[key])
-        line_of_sight1 = box_dict_UMa[key][0][1]
-        ax.boxplot(
-            [I_N for I_N, los in box_dict_UMa[key]],
-            patch_artist=True,
-            positions=[i],
-            boxprops=dict(facecolor="white", color="blue" if line_of_sight1 else "red"),
-        )
-
-    # keys = sorted([key for key in box_dict_UMi])
-    # ax.boxplot([box_dict_UMi[key] for key in keys])
-    ax.set_xticklabels([int(i) for i in keys])
-
-    ax.set_title("I/N Vs Distance graph (UMa)")
-    ax.set_xlabel("Distnace of Each BS to FSS (meters)")
-    ax.set_ylabel("I/N (db)")
-    ax.legend()
+    # fig, ax = plt.subplots()
+    #
+    # # Creating plot
+    # keys = sorted([key for key in box_dict_UMa])
+    # for i, key in enumerate(keys):
+    #     # key is distance
+    #     # print(key)
+    #     # print(box_dict_UMi[key])
+    #     line_of_sight1 = box_dict_UMa[key][0][1]
+    #     ax.boxplot(
+    #         [I_N for I_N, los in box_dict_UMa[key]],
+    #         patch_artist=True,
+    #         positions=[i],
+    #         boxprops=dict(facecolor="white", color="blue" if line_of_sight1 else "red"),
+    #     )
+    #
+    # # keys = sorted([key for key in box_dict_UMi])
+    # # ax.boxplot([box_dict_UMi[key] for key in keys])
+    # ax.set_xticklabels([int(i) for i in keys])
+    #
+    # ax.set_title("I/N Vs Distance graph (UMa)")
+    # ax.set_xlabel("Distnace of Each BS to FSS (meters)")
+    # ax.set_ylabel("I/N (db)")
+    # ax.legend()
 
     # show plot
     # plt.show()
-    fig.set_size_inches(18, 8.5)
-    # fig.savefig('graphUMa.pdf', dpi=100)
-    html15 = get_plot()
-
-    # plt.show()
-    # Creating dataset
-    box_dict_RMa = dict()
-    distance, interface_Noise = pairs_noAverage["RMa"]
-    for i in range(len(interface_Noise)):
-        if distance[i] not in box_dict_RMa:
-            box_dict_RMa[distance[i]] = []
-        box_dict_RMa[distance[i]].append([interface_Noise[i], line_of_sight[i]])
-
-    # print(box_dict_UMi)
-
-    fig, ax = plt.subplots()
-
-    # Creating plot
-    keys = sorted([key for key in box_dict_RMa])
-    for i, key in enumerate(keys):
-        # key is distance
-        # print(key)
-        # print(box_dict_UMi[key])
-        line_of_sight1 = box_dict_RMa[key][0][1]
-        ax.boxplot(
-            [I_N for I_N, los in box_dict_RMa[key]],
-            patch_artist=True,
-            positions=[i],
-            boxprops=dict(facecolor="white", color="blue" if line_of_sight1 else "red"),
-        )
-
-    ax.set_xticklabels([int(i) for i in keys])
-    ax.set_title("I/N Vs Distance graph (RMa)")
-    ax.set_xlabel("Distnace of Each BS to FSS (meters)")
-    ax.set_ylabel("I/N (db)")
-    ax.legend()
-    # show plot
-    # plt.show()
-    fig.set_size_inches(18, 8.5)
-    # fig.savefig('graphRma.pdf', dpi=100)
-    html16 = get_plot()
-    # plt.show()
-    return output
-
+    # fig.set_size_inches(18, 8.5)
+    # # fig.savefig('graphUMa.pdf', dpi=100)
+    # html15 = get_plot()
+    #
+    # # plt.show()
+    # # Creating dataset
+    # box_dict_RMa = dict()
+    # distance, interface_Noise = pairs_noAverage["RMa"]
+    # for i in range(len(interface_Noise)):
+    #     if distance[i] not in box_dict_RMa:
+    #         box_dict_RMa[distance[i]] = []
+    #     box_dict_RMa[distance[i]].append([interface_Noise[i], line_of_sight[i]])
+    #
+    # # print(box_dict_UMi)
+    #
+    # fig, ax = plt.subplots()
+    #
+    # # Creating plot
+    # keys = sorted([key for key in box_dict_RMa])
+    # for i, key in enumerate(keys):
+    #     # key is distance
+    #     # print(key)
+    #     # print(box_dict_UMi[key])
+    #     line_of_sight1 = box_dict_RMa[key][0][1]
+    #     ax.boxplot(
+    #         [I_N for I_N, los in box_dict_RMa[key]],
+    #         patch_artist=True,
+    #         positions=[i],
+    #         boxprops=dict(facecolor="white", color="blue" if line_of_sight1 else "red"),
+    #     )
+    #
+    # ax.set_xticklabels([int(i) for i in keys])
+    # ax.set_title("I/N Vs Distance graph (RMa)")
+    # ax.set_xlabel("Distnace of Each BS to FSS (meters)")
+    # ax.set_ylabel("I/N (db)")
+    # ax.legend()
+    # # show plot
+    # # plt.show()
+    # fig.set_size_inches(18, 8.5)
+    # # fig.savefig('graphRma.pdf', dpi=100)
+    # html16 = get_plot()
+    # # plt.show()
+    # return output
+    #
 
 if __name__ == '__main__':
     # Use a self-signed certificate for testing purposes
