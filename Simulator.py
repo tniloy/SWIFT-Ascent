@@ -33,6 +33,7 @@ def get_weather_json(latitude, longitude):
         print('Could not retrieve weather information for the given location')
 
 
+
 def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
     ##UMi
     ##LOS,SF=4:
@@ -56,8 +57,8 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
     hE = 1
     hBs1 = hBs - hE
     hUT1 = hUT - hE
-    c = 3 * 10 ** 8
-    D_BP = (4 * hBs1 * hUT1 * fc) / c
+    c = 3e8
+    D_BP = (4 * hBs1 * hUT1 * 12e9) / c
     PL2umi = (
             32.4
             + 40 * math.log10(d_3D)
@@ -422,7 +423,7 @@ def simulate(output=True, ctx=None):
     for i in range(1):
         FSS_X = np.append(FSS_X, x)
         FSS_Y = np.append(FSS_Y, y)
-        FSS_Z = np.append(FSS_Z, z)
+        FSS_Z = np.append(FSS_Z, 4.5)
         # 0 means not in use, 1 means in use
         channel_status = [
             random.randint(0, 1) for i in range(FSS_Channels.channel_count)
@@ -540,7 +541,7 @@ def simulate(output=True, ctx=None):
     for i in range(len(BS_X)):
         for j in range(len(FSS_X)):
             pathlossumi, distance, los_single = path_loss_UMi(
-                BS_X[i], BS_Y[i], 10, FSS_X[j], FSS_Y[j], FSS_Z[j], ctx
+                BS_X[i], BS_Y[i], 10, FSS_X[j], FSS_Y[j], 4.5, ctx
             )
             pathlossuma, distance, los_single = path_loss_UMa(
                 BS_X[i], BS_Y[i], 25, FSS_X[j], FSS_Y[j], FSS_Z[j], ctx
@@ -1228,8 +1229,8 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     ctx.bs_ue_min_radius = bs_ue_min_radius
     ctx.bs_ue_max_radius = bs_ue_max_radius
     ctx.Noise_W = Noise_W
-    fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
-    x, y, z = 0, 0, 0
+    # fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
+    x, y, z = 0, 0, 4.5
     ctx.x = x
     ctx.y = y
     ctx.z = z
@@ -1400,8 +1401,8 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
-    x, y, z = 0, 0, 0
+    # fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
+    x, y, z = 0, 0, 4.5
 
     FSS_X = np.array([])
     FSS_Y = np.array([])
@@ -1468,7 +1469,7 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
         UE_Y = np.array([])
         UE_Z = np.array([])
         UE_CHANNEL = np.array([])
-        for i in range(33):
+        for i in range(3):
             # number of split regions
             # i is the sector number
             for j in range(10):
