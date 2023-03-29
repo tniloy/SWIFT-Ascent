@@ -324,7 +324,7 @@ def Interface_UMi_1(
     LBodyLoss = 4
     #         LSpectralOverlap=10*math.log(10)
     # theta_tilt, phi_scan = max_gain_5g_parameters(theta, phi)
-    x, y, z = BS_X - FSS_X, BS_Y - FSS_Y, BS_Z - FSS_Z
+    x, y, z = BS_X - FSS_X, BS_Y - FSS_Y, (10 - 4.5)
 
     theta_bs_es = math.degrees(math.atan(y / x)) % 360
     phi_bs_es = math.degrees(math.sqrt(x ** 2 + y ** 2) / z) % 360
@@ -473,8 +473,7 @@ def simulate(output=True, ctx=None):
         BS_X = np.append(BS_X, x_BS - x_FSS)
         BS_Y = np.append(BS_Y, y_BS - y_FSS)
         BS_Z = np.append(BS_Z, 10)
-        if output:
-            print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS))
+        if output: print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) +"," + str(z_BS))
 
     if output:
         print(BS_X, BS_Y, BS_Z)
@@ -585,8 +584,7 @@ def simulate(output=True, ctx=None):
         interface_UMa_BS = np.empty([0])
         interface_RMa_BS = np.empty([0])
         for j in range(len(FSS_X)):
-            if output:
-                if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i*len(FSS_X)+j]}")
+            if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i*len(FSS_X)+j]}")
             for k in random.sample(range(len(UE_X)), 30):
                 # channel check
                 # if UE is using channel 1, the start is 12.2GHz and the end is 12.3GHz
@@ -634,8 +632,7 @@ def simulate(output=True, ctx=None):
 
                     theta_bs_ue = np.degrees(theta_bs_ue) % 360
                     phi_bs_ue = np.degrees(phi_bs_ue) % 360
-                    if output:
-                        print("theta_bs_ue:", theta_bs_ue, "phi_bs_ue:", phi_bs_ue)
+                    if output: print("theta_bs_ue:", theta_bs_ue, "phi_bs_ue:", phi_bs_ue)
 
                     theta_tilt, phi_scan = max_gain_5g_parameters(
                         theta_bs_ue, phi_bs_ue, ctx
@@ -650,7 +647,7 @@ def simulate(output=True, ctx=None):
                             FSS_X[j],
                             FSS_Y[j],
                             FSS_Z[j],
-                            FSS_phi["UMi"],
+                            FSS_phi['UMi'],
                             pathloss_UMi[i * len(FSS_X) + j],
                             theta_tilt,
                             phi_scan,
@@ -1293,15 +1290,15 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     I_N_UMi = 10 * np.log10(np.average(I_N_UMi_W))
 
     pairs = {
-        "RMa": (np.average(distance_RMa), I_N_RMa),
-        "UMa": (np.average(distance_UMa), I_N_UMa),
-        "UMi": (np.average(distance_UMi), I_N_UMi),
+        'RMa': (np.average(distance_RMa), I_N_RMa),
+        'UMa': (np.average(distance_UMa), I_N_UMa),
+        'UMi': (np.average(distance_UMi), I_N_UMi),
     }
 
     pairs_noAverage = {
-        "RMa": (distance_RMa, I_N_RMa_noAverage),
-        "UMa": (distance_UMa, I_N_UMa_noAverage),
-        "UMi": (distance_UMi, I_N_UMi_noAverage),
+        'RMa': (distance_RMa, I_N_RMa_noAverage),
+        'UMa': (distance_UMa, I_N_UMa_noAverage),
+        'UMi': (distance_UMi, I_N_UMi_noAverage),
     }
 
     with open(saved_tp_file, "wb") as f:
@@ -1309,9 +1306,9 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     with open(saved_los_file, "wb") as f:
         pickle.dump(saved_los, f)
 
-    len(pairs_noAverage["RMa"][0])
-
-    len(pairs_noAverage["RMa"][1])
+    # len(pairs_noAverage["RMa"][0])
+    #
+    # len(pairs_noAverage["RMa"][1])
 
     # for key in pairs:
     #     plt.scatter(pairs[key][0], pairs[key][1], label=key)
