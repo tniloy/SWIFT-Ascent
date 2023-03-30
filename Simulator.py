@@ -913,9 +913,7 @@ class Building:
         else:
             self.lon_FSS = lon_FSS
 
-
-
-        self.x_coord, self.y_coord, self.z_coord = self.latlon_to_XYZ()
+        self.x_coord, self.y_coord, self.z_coord = self.latlon_to_XYZ(lat_FSS, lon_FSS)
 
         self.points = []
         for i in range(len(self.x_coord)):
