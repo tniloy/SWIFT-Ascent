@@ -893,7 +893,7 @@ def gain_fss_wbes_b(phi) -> float:
 
 
 class Building:
-    def __init__(self, coordinates=None, height=None):
+    def __init__(self, coordinates=None, height=None, lat_FSS=None, lon_FSS=None):
         self.coordinates = []
         if coordinates is not None:
             self.coordinates = coordinates
@@ -902,6 +902,18 @@ class Building:
             self.height = random.uniform(10, 40)
         else:
             self.height = height
+
+        if lat_FSS is None:
+            self.lat_FSS = 37.20250
+        else:
+            self.lat_FSS = lat_FSS
+
+        if lon_FSS is None:
+            self.lon_FSS = -80.43444
+        else:
+            self.lon_FSS = lon_FSS
+
+
 
         self.x_coord, self.y_coord, self.z_coord = self.latlon_to_XYZ()
 
@@ -915,13 +927,13 @@ class Building:
 
         self.wall_polygons = self.get_wall_polygons()
 
-    def latlon_to_XYZ(self):
+    def latlon_to_XYZ(self, lat_FSS, lon_FSS):
         x_coord = np.array([])
         y_coord = np.array([])
         z_coord = np.array([])
 
-        lat_FSS = 37.20250
-        lon_FSS = -80.43444
+        # lat_FSS = 37.20250
+        # lon_FSS = -80.43444
         R = 6.371e6  # Radius of the earth
 
         x_FSS = R * math.cos(math.radians(lat_FSS)) * math.cos(math.radians(lon_FSS))
@@ -1079,21 +1091,17 @@ def parse_simulator_data():
     # fss_pos = json_data['fss_pos']
     # mbs_pos = json_data['mbs_pos']  #mbs position not required to send. It is doing nothing.
     # building_locs = json_data['building_locs']
+    lat_FSS = json_data ['lat_FSS']
+    lon_FSS =json_data ['lon_FSS']
     radius = json_data['radius']
-    # pathloss_vals = json_data['pathloss_vals']
-    # bs_channel = json_data['bs_channel']
-    # fss_channel = json_data['fss_channel']
-    # bs_heights = json_data['bs_heights']
-    # tx_power = json_data['tx_power']
     simulation_count = json_data['simulation_count']
     bs_ue_max_radius = json_data['bs_ue_max_radius']
     bs_ue_min_radius = json_data['bs_ue_min_radius']
     base_station_count = json_data['base_station_count']
-    # bs_fss_gain = json_data['bs_fss_gain']
-    # fss_bs_gain = json_data['fss_bs_gain']
+
 
     # Run the simulator with the parsed data
-    output_data = run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count)
+    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count)
 
     # Return the output as a JSON response
     return jsonify(output_data)
@@ -1114,7 +1122,8 @@ def get_plot():
 random.seed(10)
 
 
-def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count):
+def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count):
+    simulator_result = {}
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
     saved_tp_file = Path("t0p0.pkl")
@@ -1148,8 +1157,8 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
         ],
     )
     data.head(10)
-    lat_FSS = 37.20250
-    lon_FSS = -80.43444
+    # lat_FSS = 37.20250
+    # lon_FSS = -80.43444
     R = 6.371e6  # Radius of the earth
 
     x_FSS = R * math.cos(math.radians(lat_FSS)) * math.cos(math.radians(lon_FSS))
@@ -1185,11 +1194,12 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     data1[data1["properties.height"].notnull()].head(20)
     data1["geometry.coordinates"].head(10)
     b = Building(
-        data1.iloc[500]["geometry.coordinates"][0], data1.iloc[500]["properties.height"]
+        data1.iloc[500]["geometry.coordinates"][0], data1.iloc[500]["properties.height"], lat_FSS, lon_FSS
     )
     x, y = b.xy_polygon.boundary.xy
     plt.plot(x, y)
     html1 = get_plot()
+    simulator_result["html_polygon_2D"] = html1
 
     r = Renderer(backend="matplotlib")
     for p in b.wall_polygons:
@@ -1197,12 +1207,13 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     r.show()
     # https://htmlcodeeditor.com/
     htmlpolygon = get_plot()
+    simulator_result["html_polygon_3D"] = htmlpolygon
 
     buildings = []
     for i in tqdm(range(len(data1))):
         for coords in data1.iloc[i]["geometry.coordinates"]:
             try:
-                buildings.append(Building(coords, data1.iloc[i]["properties.height"]))
+                buildings.append(Building(coords, data1.iloc[i]["properties.height"], lat_FSS, lon_FSS))
             except:
                 print(f"Skipping building {i}")
 
@@ -1300,6 +1311,9 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
         'UMa': (distance_UMa, I_N_UMa_noAverage),
         'UMi': (distance_UMi, I_N_UMi_noAverage),
     }
+
+    simulator_result["Interference_values_UMi_each_Bs"] = I_N_UMi_noAverage
+    simulator_result["Interference_values_UMi"] = I_N_UMi_W
 
     with open(saved_tp_file, "wb") as f:
         pickle.dump(saved_tp, f)
@@ -1540,6 +1554,8 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     # plt.title("FSS, BS and UE Location plot")
     # fig.savefig('graphcoex.pdf', dpi=100)
     html8 = get_plot()
+    simulator_result["html_geo_location"] = html8
+    print(html8)
     # plt.show()
 
     # Creating dataset
@@ -1628,9 +1644,12 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     ax.set_ylabel('I/N (dB)', fontsize=40)
     fig.set_size_inches(40, 10)
     plt.tight_layout()
-    plt.switch_backend('TkAgg')
+    # plt.switch_backend('TkAgg')
     # show plot
     html12 = get_plot()
+    simulator_result["html_Interference_Noise"] = html12
+    #
+    print(html12)
     # # plt.show()
     # Elevation angles (FSS towards to sky )
     # fig, ax = plt.subplots()
@@ -1767,6 +1786,8 @@ def run_simulator(radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, 
     # # plt.show()
     # return output
     #
+    return simulator_result
+
 
 if __name__ == '__main__':
     # Use a self-signed certificate for testing purposes
