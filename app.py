@@ -2,6 +2,14 @@ import requests
 
 # URL of the DSA Framework web service
 dsa_url = "http://example.com/dsaframework"
+# values expected from DSA
+#   "lat_FSS":37.20250,
+#   "lon_FSS":-80.43444,
+#   "radius": 5000,
+#   "simulation_count" : 3,
+#   "bs_ue_max_radius": 1000,
+#   "bs_ue_min_radius": 1,
+#   "base_station_count": 33
 
 # Send a GET request to the DSA Framework web service
 response = requests.get(dsa_url)
