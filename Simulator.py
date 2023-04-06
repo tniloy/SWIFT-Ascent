@@ -66,17 +66,45 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
             - 9.5 * math.log10((D_BP) ** 2 + (hBs - hUT) ** 2)
     )
 
-    if 10 <= d_2D and d_2D <= D_BP:
-        PLUMiLOS = PL1umi
-    elif D_BP <= d_2D and d_2D <= 5000:
-        PLUMiLOS = PL2umi
+    PLUMiLOS= 0
+    PL1umiNLOS =0
+
+    if Rain:
+        # x is the rain rate mm/h
+        P= -5.520 * 10 ** -12 * x ** 3 +  3.26 * 10 ** -9 * x ** 2 - 1.21 * x * 10 ** -7 - 6 * 10 ** -6   #av (considering vertical polarization)
+        Q=  8 * 10 ** -10 * x ** 3 - 4.552 * 10 ** -7 * x ** 2 - 3.03 * x * 10 ** -5 + 0.001   #bv (considering vertical polarization)
+        R= -5.71 * 10 ** -9 * x ** 3 + 6 * 10 ** -7 * x ** 2 + 8.707 * x * 10 ** -3 - 0.018     #cv (considering vertical polarization)
+        S= - 1.073 * 10 ** -7 * x ** 3 + 1.068 * 10 ** -4 * x ** 2 - 0.0598 * x + 0.0442       #dv (considering vertical polarization)
+
+        #Attenuation Factor due to rain
+        A = (P * (fc ** 3) + Q * (fc ** 2) + R * fc + S) * 1000  # (dB/m)
+
+        if 10 <= d_2D and d_2D <= D_BP:
+            PLUMiLOS = PL1umi + A
+        elif D_BP <= d_2D and d_2D <= 5000:
+            PLUMiLOS = PL2umi + A
+        else:
+            PLUMiLOS = 1 + A
+
+            ##NLOS,SF=7.82:
+        PL1umiNLOS = (
+                             35.3 * math.log10(d_3D) + 22.4 + 21.3 * math.log10(fc) - 0.3 * (hUT - 1.5)
+                     ) + A
     else:
-        PLUMiLOS = 1
+
+        if 10 <= d_2D and d_2D <= D_BP:
+            PLUMiLOS = PL1umi
+        elif D_BP <= d_2D and d_2D <= 5000:
+            PLUMiLOS = PL2umi
+        else:
+            PLUMiLOS = 1
 
     ##NLOS,SF=7.82:
-    PL1umiNLOS = (
-            35.3 * math.log10(d_3D) + 22.4 + 21.3 * math.log10(fc) - 0.3 * (hUT - 1.5)
-    )
+        PL1umiNLOS = (
+                35.3 * math.log10(d_3D) + 22.4 + 21.3 * math.log10(fc) - 0.3 * (hUT - 1.5)
+        )
+
+
     PLUMiNLOS = max(PLUMiLOS, PL1umiNLOS)
 
     line_of_sight = True
