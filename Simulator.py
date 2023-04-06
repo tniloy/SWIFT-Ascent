@@ -77,7 +77,7 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
         S= - 1.073 * 10 ** -7 * x ** 3 + 1.068 * 10 ** -4 * x ** 2 - 0.0598 * x + 0.0442       #dv (considering vertical polarization)
 
         #Attenuation Factor due to rain
-        A = (P * (fc ** 3) + Q * (fc ** 2) + R * fc + S) * 1000  # (dB/m)
+        A = (P * (fc ** 3) + Q * (fc ** 2) + R * fc + S) / 1000  # (dB/m)
 
         if 10 <= d_2D and d_2D <= D_BP:
             PLUMiLOS = PL1umi + A
