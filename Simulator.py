@@ -68,8 +68,13 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
 
     PLUMiLOS= 0
     PL1umiNLOS =0
+    weather = get_weather_json(ctx.lat_FSS, ctx.lon_FSS)
+    # rain = weather["rain"]
+    # x = weather["rain"]["1h"] #rain_rate
+    rain = ctx.rain
+    x = ctx.rain_rate
 
-    if Rain:
+    if rain:
         # x is the rain rate mm/h
         P= -5.520 * 10 ** -12 * x ** 3 +  3.26 * 10 ** -9 * x ** 2 - 1.21 * x * 10 ** -7 - 6 * 10 ** -6   #av (considering vertical polarization)
         Q=  8 * 10 ** -10 * x ** 3 - 4.552 * 10 ** -7 * x ** 2 - 3.03 * x * 10 ** -5 + 0.001   #bv (considering vertical polarization)
@@ -1124,10 +1129,12 @@ def parse_simulator_data():
     bs_ue_max_radius = json_data['bs_ue_max_radius']
     bs_ue_min_radius = json_data['bs_ue_min_radius']
     base_station_count = json_data['base_station_count']
+    rain = json_data['rain']
+    rain_rate = json_data['rain_rate']
 
 
     # Run the simulator with the parsed data
-    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count)
+    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate)
 
     # Return the output as a JSON response
     return jsonify(output_data)
@@ -1148,12 +1155,16 @@ def get_plot():
 random.seed(10)
 
 
-def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count):
+def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate):
     simulator_result = {}
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
     saved_tp_file = Path("t0p0.pkl")
     ctx = Context()
+    ctx.rain = rain
+    ctx.rain_rate = rain_rate
+    ctx.lat_FSS = lat_FSS
+    ctx.lon_FSS = lon_FSS
     if saved_tp_file.is_file():
         with open(saved_tp_file, "rb") as f:
             saved_tp = pickle.load(f)
