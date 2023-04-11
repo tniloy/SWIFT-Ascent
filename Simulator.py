@@ -68,7 +68,7 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
 
     PLUMiLOS= 0
     PL1umiNLOS =0
-    weather = get_weather_json(ctx.lat_FSS, ctx.lon_FSS)
+    #weather = get_weather_json(latitude=ctx.lat_FSS, longitude=ctx.lon_FSS)
     # rain = weather["rain"]
     # x = weather["rain"]["1h"] #rain_rate
     rain = ctx.rain
@@ -1131,10 +1131,43 @@ def parse_simulator_data():
     base_station_count = json_data['base_station_count']
     rain = json_data['rain']
     rain_rate = json_data['rain_rate']
+    # Parse the base station data into a list of dictionaries
+    base_stations = []
+    for bs_data in json_data['base_stations']:
+        base_station = {
+            'cid': bs_data['cid'],
+            'latitude': bs_data['latitude'],
+            'longitude': bs_data['longitude'],
+            'range': bs_data['range'],
+            'samples': bs_data['samples'],
+            'averageSignal': bs_data['averageSignal'],
+            'changeable': bs_data['changeable'],
+            'lac': bs_data['lac'],
+            'mcc': bs_data['mcc'],
+            'mnc': bs_data['mnc'],
+            'radio': bs_data['radio'],
+            'status': bs_data['status'],
+            'unique_id': bs_data['unique_id'],
+            'unit': bs_data['unit'],
+            'updated': bs_data['updated']
+        }
+        base_stations.append(base_station)
 
 
     # Run the simulator with the parsed data
-    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate)
+    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate, base_stations)
+
+    # Check if the response was successful
+    if output_data.status_code == 200:
+        # Parse the response as JSON
+        response_data = output_data.json()
+
+        # Write the response data to a file
+        with open('output_data.json', 'w') as outfile:
+            json.dump(response_data, outfile)
+    else:
+        # Handle the error case
+        print('Request failed with status code:', output_data.status_code)
 
     # Return the output as a JSON response
     return jsonify(output_data)
@@ -1155,7 +1188,7 @@ def get_plot():
 random.seed(10)
 
 
-def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate):
+def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate, base_stations):
     simulator_result = {}
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
@@ -1174,25 +1207,26 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     if saved_los_file.is_file():
         with open(saved_los_file, "rb") as f:
             saved_los = pickle.load(f)
-    data = pd.read_csv(
-        "310.csv",
-        names=[
-            "radio",
-            "mcc",
-            "mnc",
-            "lac",
-            "cid",
-            "unit",
-            "longitude",
-            "latitude",
-            "range",
-            "samples",
-            "changeable",
-            "created",
-            "updated",
-            "averageSignal",
-        ],
-    )
+    # data = pd.read_csv(
+    #     "310.csv",
+    #     names=[
+    #         "radio",
+    #         "mcc",
+    #         "mnc",
+    #         "lac",
+    #         "cid",
+    #         "unit",
+    #         "longitude",
+    #         "latitude",
+    #         "range",
+    #         "samples",
+    #         "changeable",
+    #         "created",
+    #         "updated",
+    #         "averageSignal",
+    #     ],
+    # )
+    data = pd.DataFrame(base_stations)
     data.head(10)
     # lat_FSS = 37.20250
     # lon_FSS = -80.43444
@@ -1349,8 +1383,8 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
         'UMi': (distance_UMi, I_N_UMi_noAverage),
     }
 
-    simulator_result["Interference_values_UMi_each_Bs"] = I_N_UMi_noAverage
-    simulator_result["Interference_values_UMi"] = I_N_UMi_W
+    simulator_result["Interference_values_UMi_each_Bs"] = I_N_UMi_noAverage.tolist()
+    simulator_result["Interference_values_UMi"] = I_N_UMi_W.tolist()
 
     with open(saved_tp_file, "wb") as f:
         pickle.dump(saved_tp, f)
