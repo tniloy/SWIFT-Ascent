@@ -22,6 +22,7 @@ from weather import get_weather
 
 matplotlib.use('Agg')
 
+
 def get_weather_json(latitude, longitude):
     weather_info = get_weather(f"{latitude},{longitude}")
     if weather_info:
@@ -31,7 +32,6 @@ def get_weather_json(latitude, longitude):
         return weather_info
     else:
         print('Could not retrieve weather information for the given location')
-
 
 
 def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
@@ -66,9 +66,9 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
             - 9.5 * math.log10((D_BP) ** 2 + (hBs - hUT) ** 2)
     )
 
-    PLUMiLOS= 0
-    PL1umiNLOS =0
-    #weather = get_weather_json(latitude=ctx.lat_FSS, longitude=ctx.lon_FSS)
+    PLUMiLOS = 0
+    PL1umiNLOS = 0
+    # weather = get_weather_json(latitude=ctx.lat_FSS, longitude=ctx.lon_FSS)
     # rain = weather["rain"]
     # x = weather["rain"]["1h"] #rain_rate
     rain = ctx.rain
@@ -76,12 +76,12 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
 
     if rain:
         # x is the rain rate mm/h
-        P= -5.520 * 10 ** -12 * x ** 3 +  3.26 * 10 ** -9 * x ** 2 - 1.21 * x * 10 ** -7 - 6 * 10 ** -6   #av (considering vertical polarization)
-        Q=  8 * 10 ** -10 * x ** 3 - 4.552 * 10 ** -7 * x ** 2 - 3.03 * x * 10 ** -5 + 0.001   #bv (considering vertical polarization)
-        R= -5.71 * 10 ** -9 * x ** 3 + 6 * 10 ** -7 * x ** 2 + 8.707 * x * 10 ** -3 - 0.018     #cv (considering vertical polarization)
-        S= - 1.073 * 10 ** -7 * x ** 3 + 1.068 * 10 ** -4 * x ** 2 - 0.0598 * x + 0.0442       #dv (considering vertical polarization)
+        P = -5.520 * 10 ** -12 * x ** 3 + 3.26 * 10 ** -9 * x ** 2 - 1.21 * x * 10 ** -7 - 6 * 10 ** -6  # av (considering vertical polarization)
+        Q = 8 * 10 ** -10 * x ** 3 - 4.552 * 10 ** -7 * x ** 2 - 3.03 * x * 10 ** -5 + 0.001  # bv (considering vertical polarization)
+        R = -5.71 * 10 ** -9 * x ** 3 + 6 * 10 ** -7 * x ** 2 + 8.707 * x * 10 ** -3 - 0.018  # cv (considering vertical polarization)
+        S = - 1.073 * 10 ** -7 * x ** 3 + 1.068 * 10 ** -4 * x ** 2 - 0.0598 * x + 0.0442  # dv (considering vertical polarization)
 
-        #Attenuation Factor due to rain
+        # Attenuation Factor due to rain
         A = (P * (fc ** 3) + Q * (fc ** 2) + R * fc + S) / 1000  # (dB/m)
 
         if 10 <= d_2D and d_2D <= D_BP:
@@ -104,11 +104,10 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
         else:
             PLUMiLOS = 1
 
-    ##NLOS,SF=7.82:
+        ##NLOS,SF=7.82:
         PL1umiNLOS = (
                 35.3 * math.log10(d_3D) + 22.4 + 21.3 * math.log10(fc) - 0.3 * (hUT - 1.5)
         )
-
 
     PLUMiNLOS = max(PLUMiLOS, PL1umiNLOS)
 
@@ -506,7 +505,7 @@ def simulate(output=True, ctx=None):
         BS_X = np.append(BS_X, x_BS - x_FSS)
         BS_Y = np.append(BS_Y, y_BS - y_FSS)
         BS_Z = np.append(BS_Z, 10)
-        if output: print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) +"," + str(z_BS))
+        if output: print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
 
     if output:
         print(BS_X, BS_Y, BS_Z)
@@ -617,7 +616,7 @@ def simulate(output=True, ctx=None):
         interface_UMa_BS = np.empty([0])
         interface_RMa_BS = np.empty([0])
         for j in range(len(FSS_X)):
-            if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i*len(FSS_X)+j]}")
+            if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i * len(FSS_X) + j]}")
             for k in random.sample(range(len(UE_X)), 30):
                 # channel check
                 # if UE is using channel 1, the start is 12.2GHz and the end is 12.3GHz
@@ -1122,8 +1121,8 @@ def parse_simulator_data():
     # fss_pos = json_data['fss_pos']
     # mbs_pos = json_data['mbs_pos']  #mbs position not required to send. It is doing nothing.
     # building_locs = json_data['building_locs']
-    lat_FSS = json_data ['lat_FSS']
-    lon_FSS =json_data ['lon_FSS']
+    lat_FSS = json_data['lat_FSS']
+    lon_FSS = json_data['lon_FSS']
     radius = json_data['radius']
     simulation_count = json_data['simulation_count']
     bs_ue_max_radius = json_data['bs_ue_max_radius']
@@ -1153,21 +1152,18 @@ def parse_simulator_data():
         }
         base_stations.append(base_station)
 
-
     # Run the simulator with the parsed data
-    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate, base_stations)
+    output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius,
+                                base_station_count, rain, rain_rate, base_stations)
 
-    # Check if the response was successful
-    if output_data.status_code == 200:
-        # Parse the response as JSON
-        response_data = output_data.json()
-
-        # Write the response data to a file
-        with open('output_data.json', 'w') as outfile:
-            json.dump(response_data, outfile)
-    else:
-        # Handle the error case
-        print('Request failed with status code:', output_data.status_code)
+    # # Check if the response was successful
+    # if output_data.status_code == 200:
+    #     # Parse the response as JSON
+    # response_data = output_data.json()
+    #
+    # # Write the response data to a file
+    # with open('output_data.json', 'w') as outfile:
+    #     json.dump(response_data, outfile)
 
     # Return the output as a JSON response
     return jsonify(output_data)
@@ -1188,7 +1184,8 @@ def get_plot():
 random.seed(10)
 
 
-def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count, rain, rain_rate, base_stations):
+def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count,
+                  rain, rain_rate, base_stations):
     simulator_result = {}
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
@@ -1692,7 +1689,7 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     for i in range(len(interface_Noise)):
         if distance[i] not in box_dict_UMi:
             box_dict_UMi[distance[i]] = []
-        box_dict_UMi[distance[i]].append([interface_Noise[i],line_of_sight[i]])
+        box_dict_UMi[distance[i]].append([interface_Noise[i], line_of_sight[i]])
     fig, ax = plt.subplots()
     # Creating plot
     keys = sorted([key for key in box_dict_UMi])
