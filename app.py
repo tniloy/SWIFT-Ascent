@@ -39,7 +39,7 @@ response = requests.post(simulator_api_url, data=json.dumps(simulator_api_data),
 api_response = response.json()
 
 # Print the API response
-print(api_response)
+print(api_response) #prints API response to file
 
 # if __name__ == '__main__':
 #     # Use a self-signed certificate for testing purposes
