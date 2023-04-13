@@ -1156,14 +1156,43 @@ def parse_simulator_data():
     output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius,
                                 base_station_count, rain, rain_rate, base_stations)
 
-    # # Check if the response was successful
-    # if output_data.status_code == 200:
-    #     # Parse the response as JSON
-    # response_data = output_data.json()
-    #
-    # # Write the response data to a file
-    # with open('output_data.json', 'w') as outfile:
-    #     json.dump(response_data, outfile)
+    # output_data = {
+    #     "Interference_values_UMi_each_Bs": [
+    #         -31.586625574403882,
+    #         -35.191424022093855,
+    #         -18.56990745856593,
+    #         -35.47686461913297,
+    #         -38.474774043668745,
+    #         -11.141635807315321,
+    #         -62.20374665019345,
+    #         -19.370609097823518,
+    #         -26.541763404108263,
+    #         -47.50175471126143,
+    #         -17.88587437929757,
+    #         -35.195019551854266,
+    #         -52.674793302083586,
+    #         -29.62489982828368,
+    #         2.7971202581528343,
+    #         6.107579300585324,
+    #         -25.10698899447582,
+    #         -69.47948320793697,
+    #         -50.725313822900524,
+    #         -55.20441399983092,
+    #         -31.93346957378436,
+    #         -40.95931464486423,
+    #         -39.14056440921604,
+    #         -21.701477074230823,
+    #         -32.91510580409362,
+    #         -31.42415785610693,
+    #         -35.99502355385156,
+    #         -26.626390561350718,
+    #         -25.523930166508602,
+    #         -23.923752659832083,
+    #         -41.86998035329006,
+    #         -47.895659185236084,
+    #         -37.21194865204484
+    #     ]
+    # }
 
     # Return the output as a JSON response
     return jsonify(output_data)
