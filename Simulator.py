@@ -496,6 +496,7 @@ def simulate(output=True, ctx=None):
         x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
         y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
         #         z_BS = R * math.sin(math.radians(lat_BS))
+        z_BS= 10
 
         x_FSS = ctx.x_FSS
         y_FSS = ctx.y_FSS
@@ -574,12 +575,14 @@ def simulate(output=True, ctx=None):
             pathlossumi, distance, los_single = path_loss_UMi(
                 BS_X[i], BS_Y[i], 10, FSS_X[j], FSS_Y[j], 4.5, ctx
             )
-            pathlossuma, distance, los_single = path_loss_UMa(
-                BS_X[i], BS_Y[i], 25, FSS_X[j], FSS_Y[j], FSS_Z[j], ctx
-            )
-            pathlossrma, distance, los_single = path_loss_RMa(
-                BS_X[i], BS_Y[i], 35, FSS_X[j], FSS_Y[j], FSS_Z[j], ctx
-            )
+            pathlossuma = []
+            pathlossrma = []
+            # pathlossuma, distance, los_single = path_loss_UMa(
+            #     BS_X[i], BS_Y[i], 25, FSS_X[j], FSS_Y[j], FSS_Z[j], ctx
+            # )
+            # pathlossrma, distance, los_single = path_loss_RMa(
+            #     BS_X[i], BS_Y[i], 35, FSS_X[j], FSS_Y[j], FSS_Z[j], ctx
+            # )
             if output:
                 print(
                     "pathloss umi:",
@@ -1252,8 +1255,8 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     #         "averageSignal",
     #     ],
     # )
-    data = pd.DataFrame(base_stations)
-    data.head(10)
+    data_within_zone= pd.DataFrame(base_stations)
+    data_within_zone.head(10)
     # lat_FSS = 37.20250
     # lon_FSS = -80.43444
     R = 6.371e6  # Radius of the earth
@@ -1269,48 +1272,52 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     print("X, Y, Z = " + str([x_FSS, y_FSS, z_FSS]))
     # radius = 5000  # radius of the inclusion zone
 
-    latitude_range = radius / 110574
-    longitude_range = radius / (111320 * math.cos(math.radians(latitude_range)))
-    print("Total area of inclusion zone is = " + str(radius * radius * math.pi))
-    print(latitude_range)
-    print(longitude_range)
-    data_within_zone = data[
-        (data["radio"] == "GSM")
-        & (data["longitude"] <= (lon_FSS + longitude_range))
-        & (data["longitude"] >= (lon_FSS - longitude_range))
-        & (data["latitude"] <= (lat_FSS + latitude_range))
-        & (data["latitude"] >= (lat_FSS - latitude_range))
-        ]
-
-    data_within_zone.head(10)
-    len(data_within_zone)
+    # latitude_range = radius / 110574
+    # longitude_range = radius / (111320 * math.cos(math.radians(latitude_range)))
+    # print("Total area of inclusion zone is = " + str(radius * radius * math.pi))
+    # print(latitude_range)
+    # print(longitude_range)
+    # data_within_zone = data[
+    #     (data["radio"] == "GSM")
+    #     & (data["longitude"] <= (lon_FSS + longitude_range))
+    #     & (data["longitude"] >= (lon_FSS - longitude_range))
+    #     & (data["latitude"] <= (lat_FSS + latitude_range))
+    #     & (data["latitude"] >= (lat_FSS - latitude_range))
+    #     ]
+    #
+    # data_within_zone.head(10)
+    # len(data_within_zone)
     with open("data/export (1).geojson") as f:
         df = json.load(f)
         data1 = pd.json_normalize(df, record_path=["features"])
-    data1.head(10)
-    data1[data1["properties.height"].notnull()].head(20)
-    data1["geometry.coordinates"].head(10)
-    b = Building(
-        data1.iloc[500]["geometry.coordinates"][0], data1.iloc[500]["properties.height"], lat_FSS, lon_FSS
-    )
-    x, y = b.xy_polygon.boundary.xy
-    plt.plot(x, y)
-    html1 = get_plot()
-    simulator_result["html_polygon_2D"] = html1
+    # data1.head(10)
+    # data1[data1["properties.height"].notnull()].head(20)
+    # data1["geometry.coordinates"].head(10)
 
-    r = Renderer(backend="matplotlib")
-    for p in b.wall_polygons:
-        r.add((p, "b", 1), normal_length=0)
-    r.show()
-    # https://htmlcodeeditor.com/
-    htmlpolygon = get_plot()
-    simulator_result["html_polygon_3D"] = htmlpolygon
+    #for demo we are not showing the polygon
+    # b = Building(
+    #     data1.iloc[500]["geometry.coordinates"][0], data1.iloc[500]["properties.height"], lat_FSS, lon_FSS
+    # )
+    # x, y = b.xy_polygon.boundary.xy
+    # plt.plot(x, y)
+    # html1 = get_plot()
+    # simulator_result["html_polygon_2D"] = html1
+
+    # we are not showing the 3D view in the demo
+    # r = Renderer(backend="matplotlib")
+    # for p in b.wall_polygons:
+    #     r.add((p, "b", 1), normal_length=0)
+    # r.show()
+    # # https://htmlcodeeditor.com/
+    # htmlpolygon = get_plot()
+    # simulator_result["html_polygon_3D"] = htmlpolygon
 
     buildings = []
     for i in tqdm(range(len(data1))):
         for coords in data1.iloc[i]["geometry.coordinates"]:
             try:
                 buildings.append(Building(coords, data1.iloc[i]["properties.height"], lat_FSS, lon_FSS))
+                print(f"created building {i}")
             except:
                 print(f"Skipping building {i}")
 
@@ -1412,10 +1419,12 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     simulator_result["Interference_values_UMi_each_Bs"] = I_N_UMi_noAverage.tolist()
     simulator_result["Interference_values_UMi"] = I_N_UMi_W.tolist()
 
+    # TODO NEED TO RECHECK THE VALUES
     with open(saved_tp_file, "wb") as f:
         pickle.dump(saved_tp, f)
     with open(saved_los_file, "wb") as f:
         pickle.dump(saved_los, f)
+
 
     # len(pairs_noAverage["RMa"][0])
     #
@@ -1502,157 +1511,162 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # plt.legend()
     # html7 = get_plot()
     # plt.show()
-    output = False
-    # bs_ue_max_radius = 1000
-    # bs_ue_min_radius = 1
-    # base_station_count = 33
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
 
-    # fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
-    x, y, z = 0, 0, 4.5
 
-    FSS_X = np.array([])
-    FSS_Y = np.array([])
-    FSS_Z = np.array([])
-    FSS_CHANNELS = []
-    for i in range(1):
-        FSS_X = np.append(FSS_X, x)
-        FSS_Y = np.append(FSS_Y, y)
-        FSS_Z = np.append(FSS_Z, z)
-        # 0 means not in use, 1 means in use
-        channel_status = [random.randint(0, 1) for i in range(FSS_Channels.channel_count)]
-        channels_used = np.array(
-            [i for i in range(FSS_Channels.channel_count) if channel_status[i] == 1]
-        )
-        FSS_CHANNELS.append(channels_used)
-        if output:
-            print(
-                "FSS Co-ordinates="
-                + str(x)
-                + ","
-                + str(y)
-                + ","
-                + str(z)
-                + ", channel: "
-                + str(channels_used)
-            )
-    if output:
-        print(FSS_X, FSS_Y, FSS_Z, FSS_CHANNELS)
-
-    BS_X = np.array([])
-    BS_Y = np.array([])
-    BS_Z = np.array([])
-
-    # Randomly select base stations
-    base_station_indexes = random.sample(range(len(data_within_zone)), base_station_count)
-
-    for i in base_station_indexes:
-
-        lat_BS, lon_BS = (
-            data_within_zone.iloc[i]["latitude"],
-            data_within_zone.iloc[i]["longitude"],
-        )
-        # bs1 = BS(radius, max_height=35, carr_freq=12e3, interference_type=None)
-        x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
-        y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
-        #         z_BS = R * math.sin(math.radians(lat_BS))
-
-        BS_X = np.append(BS_X, x_BS - x_FSS)
-        BS_Y = np.append(BS_Y, y_BS - y_FSS)
-        BS_Z = np.append(BS_Z, 10)
-        if output:
-            print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
-
-    if output:
-        print(BS_X, BS_Y, BS_Z)
+    # not showing the geograph in the demo
+    # output = False
+    # # bs_ue_max_radius = 1000
+    # # bs_ue_min_radius = 1
+    # # base_station_count = 33
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111)
+    #
+    # # fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
+    # x, y, z = 0, 0, 4.5
+    #
+    # FSS_X = np.array([])
+    # FSS_Y = np.array([])
+    # FSS_Z = np.array([])
+    # FSS_CHANNELS = []
+    # for i in range(1):
+    #     FSS_X = np.append(FSS_X, x)
+    #     FSS_Y = np.append(FSS_Y, y)
+    #     FSS_Z = np.append(FSS_Z, z)
+    #     # 0 means not in use, 1 means in use
+    #     channel_status = [random.randint(0, 1) for i in range(FSS_Channels.channel_count)]
+    #     channels_used = np.array(
+    #         [i for i in range(FSS_Channels.channel_count) if channel_status[i] == 1]
+    #     )
+    #     FSS_CHANNELS.append(channels_used)
+    #     if output:
+    #         print(
+    #             "FSS Co-ordinates="
+    #             + str(x)
+    #             + ","
+    #             + str(y)
+    #             + ","
+    #             + str(z)
+    #             + ", channel: "
+    #             + str(channels_used)
+    #         )
+    # if output:
+    #     print(FSS_X, FSS_Y, FSS_Z, FSS_CHANNELS)
+    #
+    # BS_X = np.array([])
+    # BS_Y = np.array([])
+    # BS_Z = np.array([])
+    #
+    # # Randomly select base stations
+    # # base_station_indexes = random.sample(range(len(data_within_zone)), base_station_count)
+    #
+    # for i in base_station_count:
+    #
+    #     lat_BS, lon_BS = (
+    #         data_within_zone.iloc[i]["latitude"],
+    #         data_within_zone.iloc[i]["longitude"],
+    #     )
+    #     # bs1 = BS(radius, max_height=35, carr_freq=12e3, interference_type=None)
+    #     x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
+    #     y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
+    #     #         z_BS = R * math.sin(math.radians(lat_BS))
+    #     z_BS =10
+    #
+    #     BS_X = np.append(BS_X, x_BS - x_FSS)
+    #     BS_Y = np.append(BS_Y, y_BS - y_FSS)
+    #     BS_Z = np.append(BS_Z, 10)
+    #     if output:
+    #         print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
+    #
+    # if output:
+    #     print(BS_X, BS_Y, BS_Z)
 
     # Create user equipment
-    UE_X = np.array([])
-    UE_Y = np.array([])
-    UE_Z = np.array([])
-    UE_CHANNEL = np.array([])
-    for p in range(len(BS_X)):
-        UE_X = np.array([])
-        UE_Y = np.array([])
-        UE_Z = np.array([])
-        UE_CHANNEL = np.array([])
-        for i in range(3):
-            # number of split regions
-            # i is the sector number
-            for j in range(10):
-                # number of UEs per region
-                # j is the number of the UE in one sector
-                bs_x, bs_y, bs_z = BS_X[p], BS_Y[p], BS_Z[p]
-                theta_bs_ue = random.uniform(120 * i, 120 * (i + 1))
-                # 0-120, 120-240, 240-360
-                radius_bs_ue = random.uniform(bs_ue_min_radius, bs_ue_max_radius)
-
-                x1 = bs_x + radius_bs_ue * math.cos(math.radians(theta_bs_ue))
-                y1 = bs_y + radius_bs_ue * math.sin(math.radians(theta_bs_ue))
-
-                UE_X = np.append(UE_X, x1)
-                UE_Y = np.append(UE_Y, y1)
-                UE_Z = np.append(UE_Z, 1.5)
-
-                maximum_UEs_per_channel = 4
-
-                if j > maximum_UEs_per_channel * BS_Channels.channel_count:
-                    raise Exception(f"BS cannot support {j} UEs")
-
-                count = {i: 0 for i in range(1, BS_Channels.channel_count + 1)}
-
-                channel = random.randint(1, BS_Channels.channel_count)
-
-                while count[channel] >= maximum_UEs_per_channel:
-                    channel = random.randint(1, BS_Channels.channel_count)
-
-                count[channel] += 1
-
-                UE_CHANNEL = np.append(UE_CHANNEL, channel)
-
-                if output:
-                    print(
-                        "UE Co-ordinates="
-                        + str(x1)
-                        + ","
-                        + str(y1)
-                        + ","
-                        + str(z1)
-                        + ", channel: "
-                        + str(channel)
-                    )
-            if output:
-                print(UE_X, UE_Y, UE_Z)
-
-        indices = np.array([i * 10 + j for i in range(0, len(UE_X) // 10 - 1, 3) for j in range(0, 10)])
-        ax.scatter([UE_X[i] for i in indices], [UE_Y[i] for i in indices], alpha=0.8, s=10, label='UE Location',
-                   color='green')
-        ax.scatter([UE_X[i + 10] for i in indices], [UE_Y[i + 10] for i in indices], alpha=0.8, s=10,
-                   label='UE Location', color='orange')
-        ax.scatter([UE_X[i + 20] for i in indices], [UE_Y[i + 20] for i in indices], alpha=0.8, s=10,
-                   label='UE Location', color='blue')
-
-    ax.scatter(BS_X, BS_Y, alpha=0.8, s=70, label='BS Location', color='red', marker="^")
-    ax.scatter(FSS_X, FSS_Y, alpha=0.8, s=220, label='FSS Location', color='purple', marker="*")
-
-    legend_handles = [Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='green'),
-                      Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='orange'),
-                      Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='blue'),
-                      Line2D([0], [0], marker='^', color='w', label='BS Location', markerfacecolor='r'),
-                      Line2D([0], [0], marker='*', color='w', label='FSS Location', markerfacecolor='purple')]
-
-    plt.legend(handles=legend_handles, fontsize=7)
-
-    ax.set_xlabel('X-Coordinates(meter)', fontsize=10)
-    ax.set_ylabel('Y-Coordinates (meter)', fontsize=9)
-    # fig.savefig('Revisedgraphcoex2final.pdf', dpi=100)
-    # plt.show()
-    # plt.title("FSS, BS and UE Location plot")
-    # fig.savefig('graphcoex.pdf', dpi=100)
-    html8 = get_plot()
-    simulator_result["html_geo_location"] = html8
-    print(html8)
+    # UE_X = np.array([])
+    # UE_Y = np.array([])
+    # UE_Z = np.array([])
+    # UE_CHANNEL = np.array([])
+    # for p in range(len(BS_X)):
+    #     UE_X = np.array([])
+    #     UE_Y = np.array([])
+    #     UE_Z = np.array([])
+    #     UE_CHANNEL = np.array([])
+    #     for i in range(3):
+    #         # number of split regions
+    #         # i is the sector number
+    #         for j in range(10):
+    #             # number of UEs per region
+    #             # j is the number of the UE in one sector
+    #             bs_x, bs_y, bs_z = BS_X[p], BS_Y[p], BS_Z[p]
+    #             theta_bs_ue = random.uniform(120 * i, 120 * (i + 1))
+    #             # 0-120, 120-240, 240-360
+    #             radius_bs_ue = random.uniform(bs_ue_min_radius, bs_ue_max_radius)
+    #
+    #             x1 = bs_x + radius_bs_ue * math.cos(math.radians(theta_bs_ue))
+    #             y1 = bs_y + radius_bs_ue * math.sin(math.radians(theta_bs_ue))
+    #             z1= 1.5
+    #
+    #             UE_X = np.append(UE_X, x1)
+    #             UE_Y = np.append(UE_Y, y1)
+    #             UE_Z = np.append(UE_Z, 1.5)
+    #
+    #             maximum_UEs_per_channel = 4
+    #
+    #             if j > maximum_UEs_per_channel * BS_Channels.channel_count:
+    #                 raise Exception(f"BS cannot support {j} UEs")
+    #
+    #             count = {i: 0 for i in range(1, BS_Channels.channel_count + 1)}
+    #
+    #             channel = random.randint(1, BS_Channels.channel_count)
+    #
+    #             while count[channel] >= maximum_UEs_per_channel:
+    #                 channel = random.randint(1, BS_Channels.channel_count)
+    #
+    #             count[channel] += 1
+    #
+    #             UE_CHANNEL = np.append(UE_CHANNEL, channel)
+    #
+    #             if output:
+    #                 print(
+    #                     "UE Co-ordinates="
+    #                     + str(x1)
+    #                     + ","
+    #                     + str(y1)
+    #                     + ","
+    #                     + str(z1)
+    #                     + ", channel: "
+    #                     + str(channel)
+    #                 )
+    #         if output:
+    #             print(UE_X, UE_Y, UE_Z)
+    #
+    #     indices = np.array([i * 10 + j for i in range(0, len(UE_X) // 10 - 1, 3) for j in range(0, 10)])
+    #     ax.scatter([UE_X[i] for i in indices], [UE_Y[i] for i in indices], alpha=0.8, s=10, label='UE Location',
+    #                color='green')
+    #     ax.scatter([UE_X[i + 10] for i in indices], [UE_Y[i + 10] for i in indices], alpha=0.8, s=10,
+    #                label='UE Location', color='orange')
+    #     ax.scatter([UE_X[i + 20] for i in indices], [UE_Y[i + 20] for i in indices], alpha=0.8, s=10,
+    #                label='UE Location', color='blue')
+    #
+    # ax.scatter(BS_X, BS_Y, alpha=0.8, s=70, label='BS Location', color='red', marker="^")
+    # ax.scatter(FSS_X, FSS_Y, alpha=0.8, s=220, label='FSS Location', color='purple', marker="*")
+    #
+    # legend_handles = [Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='green'),
+    #                   Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='orange'),
+    #                   Line2D([0], [0], marker='o', color='w', label='UE Location', markerfacecolor='blue'),
+    #                   Line2D([0], [0], marker='^', color='w', label='BS Location', markerfacecolor='r'),
+    #                   Line2D([0], [0], marker='*', color='w', label='FSS Location', markerfacecolor='purple')]
+    #
+    # plt.legend(handles=legend_handles, fontsize=7)
+    #
+    # ax.set_xlabel('X-Coordinates(meter)', fontsize=10)
+    # ax.set_ylabel('Y-Coordinates (meter)', fontsize=9)
+    # # fig.savefig('Revisedgraphcoex2final.pdf', dpi=100)
+    # # plt.show()
+    # # plt.title("FSS, BS and UE Location plot")
+    # # fig.savefig('graphcoex.pdf', dpi=100)
+    # html8 = get_plot()
+    # simulator_result["html_geo_location"] = html8
+    # print(html8)
     # plt.show()
 
     # Creating dataset
@@ -1713,6 +1727,8 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # # plt.show()
     # box_dict_UMi
     # Creating dataset
+
+    #
     box_dict_UMi = dict()
     distance, interface_Noise = pairs_noAverage["UMi"]
     for i in range(len(interface_Noise)):
@@ -1745,8 +1761,10 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # show plot
     html12 = get_plot()
     simulator_result["html_Interference_Noise"] = html12
-    #
+    # TODO need to add a horizontal and vertical line for (Exz and I/N threshold)
+    #TODO can use the distance from the dataset no need to calculate
     print(html12)
+
     # # plt.show()
     # Elevation angles (FSS towards to sky )
     # fig, ax = plt.subplots()
