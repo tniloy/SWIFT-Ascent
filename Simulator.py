@@ -114,27 +114,52 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
     line_of_sight = True
 
     ##realistic pathloss:
-    bs_to_fss_segment = Segment(Point(BS_X, BS_Y, BS_Z), Point(FSS_X, FSS_Y, FSS_Z))
-    for i in tqdm(range(len(buildings))):
-        #     for i in range(len(buildings)):
-        for polygon in buildings[i].wall_polygons:
-            if (hash(bs_to_fss_segment), hash(polygon)) in saved_los:
-                if saved_los.get((hash(bs_to_fss_segment), hash(polygon))):
-                    path_loss_UMi = PLUMiNLOS
-                    line_of_sight = False
-                else:
-                    path_loss_UMi = PLUMiLOS
-            #                     line_of_sight = True
+    # bs_to_fss_segment = Segment(Point(BS_X, BS_Y, BS_Z), Point(FSS_X, FSS_Y, FSS_Z))
+    # for i in tqdm(range(len(buildings))):
+    #     #     for i in range(len(buildings)):
+    #     for polygon in buildings[i].wall_polygons:
+    #         if (hash(bs_to_fss_segment), hash(polygon)) in saved_los:
+    #             if saved_los.get((hash(bs_to_fss_segment), hash(polygon))):
+    #                 path_loss_UMi = PLUMiNLOS
+    #                 line_of_sight = False
+    #             else:
+    #                 path_loss_UMi = PLUMiLOS
+    #         #                     line_of_sight = True
+    #
+    #         # intersection(line, polygon): [Intersection], None
+    #         elif intersection(bs_to_fss_segment, polygon) is not None:
+    #             path_loss_UMi = PLUMiNLOS
+    #             line_of_sight = False
+    #             saved_los[(hash(bs_to_fss_segment), hash(polygon))] = True
+    #         else:
+    #             path_loss_UMi = PLUMiLOS
+    #             #                 line_of_sight = True
+    #             saved_los[(hash(bs_to_fss_segment), hash(polygon))] = False
 
-            # intersection(line, polygon): [Intersection], None
-            elif intersection(bs_to_fss_segment, polygon) is not None:
+
+    #realisticpathlossmodified
+    bs_to_fss_segment = Segment(Point(BS_X, BS_Y, BS_Z), Point(FSS_X, FSS_Y, FSS_Z))
+    bs_to_fss_segment_hash = hash(bs_to_fss_segment)
+
+    all_polygons = [(i, polygon) for i, building in enumerate(buildings) for polygon in building.wall_polygons]
+
+    for i, polygon in tqdm(all_polygons):
+        polygon_hash = hash(polygon)
+        if (bs_to_fss_segment_hash, polygon_hash) in saved_los:
+            if saved_los.get((bs_to_fss_segment_hash, polygon_hash)):
                 path_loss_UMi = PLUMiNLOS
                 line_of_sight = False
-                saved_los[(hash(bs_to_fss_segment), hash(polygon))] = True
             else:
                 path_loss_UMi = PLUMiLOS
-                #                 line_of_sight = True
-                saved_los[(hash(bs_to_fss_segment), hash(polygon))] = False
+        elif intersection(bs_to_fss_segment, polygon) is not None:
+            path_loss_UMi = PLUMiNLOS
+            line_of_sight = False
+            saved_los[(bs_to_fss_segment_hash, polygon_hash)] = True
+        else:
+            path_loss_UMi = PLUMiLOS
+            saved_los[(bs_to_fss_segment_hash, polygon_hash)] = False
+
+    return path_loss_UMi, d_2D, line_of_sight
 
     # #Loss Probability:
     #     if d_2D>18:
