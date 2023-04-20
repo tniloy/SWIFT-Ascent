@@ -1235,6 +1235,7 @@ def parse_simulator_data():
     base_station_count = json_data['base_station_count']
     rain = json_data['rain']
     rain_rate = json_data['rain_rate']
+    exclusion_zone_radius = json_data['exclusion_zone_radius']
     # Parse the base station data into a list of dictionaries
     base_stations = []
     for bs_data in json_data['base_stations']:
@@ -1259,7 +1260,7 @@ def parse_simulator_data():
 
     # Run the simulator with the parsed data
     output_data = run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius,
-                                base_station_count, rain, rain_rate, base_stations)
+                                base_station_count, rain, rain_rate, exclusion_zone_radius, base_stations)
 
     # output_data = {
     #     "Interference_values_UMi_each_Bs": [
@@ -1319,7 +1320,7 @@ random.seed(10)
 
 
 def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, bs_ue_min_radius, base_station_count,
-                  rain, rain_rate, base_stations):
+                  rain, rain_rate, exclusion_zone_radius, base_stations):
     simulator_result = {}
     # Structure: (theta, phi) -> (theta_etilt, phi_scan)
     saved_tp = dict()
@@ -1855,13 +1856,14 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
                    boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'))
     custom_lines = [Line2D([0], [0], color='blue', lw=6),
                     Line2D([0], [0], color='red', lw=6),
+                    Line2D([0], [0], color='green', linestyle='--', lw=6),
                     Line2D([0], [0], color='black', linestyle='--', lw=6)]
-    ax.legend(custom_lines, ['LOS', 'NLOS'], fontsize=25)
+    ax.legend(custom_lines, ['LOS', 'NLOS', 'Exclusion Zone {}'.format(exclusion_zone_radius), 'Threshold {}'.format(threshold)], fontsize=25)
     ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=30)
     ax.tick_params(axis='y', which='major', labelsize=30)
     ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=40)
     plt.axhline(y= threshold, color='black', linestyle='--', label='Threshold {}'.format(threshold))
-    ax.axvline(x=1000, color='black', linestyle='-')
+    plt.axvline(x=exclusion_zone_radius, color='green', linestyle='--', label='Exclusion Zone {}'.format(exclusion_zone_radius))
     ax.set_ylabel('I/N (dB)', fontsize=40)
     fig.set_size_inches(40, 10)
     plt.tight_layout()
