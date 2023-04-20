@@ -183,7 +183,7 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
     #         saved_los[(bs_to_fss_segment_hash, polygon_hash)] = False
 
 
-    return path_loss_UMi, d_2D, line_of_sight
+    return path_loss_UMi, d_2D, line_of_sight, saved_los
 
     # #Loss Probability:
     #     if d_2D>18:
@@ -672,7 +672,7 @@ def simulate(output=True, ctx=None):
     line_of_sight = np.empty([0])
     for i in range(len(BS_X)):
         for j in range(len(FSS_X)):
-            pathlossumi, distance, los_single = path_loss_UMi(
+            pathlossumi, distance, los_single, ctx.saved_los = path_loss_UMi(
                 BS_X[i], BS_Y[i], 10, FSS_X[j], FSS_Y[j], 4.5, ctx
             )
             pathlossuma = []
@@ -721,6 +721,7 @@ def simulate(output=True, ctx=None):
         for j in range(len(FSS_X)):
             if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i * len(FSS_X) + j]}")
             for k in random.sample(range(len(UE_X)), 30):
+                print(f"UE{k}")
                 # channel check
                 # if UE is using channel 1, the start is 12.2GHz and the end is 12.3GHz
                 bs_channel_start, bs_channel_end = BS_Channels.getChannelRange(
@@ -875,6 +876,7 @@ def simulate(output=True, ctx=None):
         distance_UMi,
         I_N_UMi,
         line_of_sight,
+        ctx.saved_los,
     )
 
 
@@ -1479,6 +1481,7 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
             distance_UMi_single,
             I_N_UMi_single_W,
             line_of_sight_single,
+            saved_los,
         ) = simulate(output=False, ctx=ctx)
         print(f"The current simulation is {i} out of total {simulation_count}")
 
@@ -1838,6 +1841,9 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     fig, ax = plt.subplots()
     # Creating plot
     keys = sorted([key for key in box_dict_UMi])
+    threshold = -8.5
+    if rain:
+        threshold = -12
     for i, key in enumerate(keys):
         # key is distance
         # print(key)
@@ -1854,6 +1860,8 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=30)
     ax.tick_params(axis='y', which='major', labelsize=30)
     ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=40)
+    plt.axhline(y= threshold, color='black', linestyle='--', label='Threshold {}'.format(threshold))
+    ax.axvline(x=1000, color='black', linestyle='-')
     ax.set_ylabel('I/N (dB)', fontsize=40)
     fig.set_size_inches(40, 10)
     plt.tight_layout()
