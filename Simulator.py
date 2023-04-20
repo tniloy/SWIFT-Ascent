@@ -1521,7 +1521,7 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     }
 
     simulator_result["Interference_values_UMi_each_Bs"] = I_N_UMi_noAverage.tolist()
-    simulator_result["Interference_values_UMi"] = I_N_UMi_W.tolist()
+    # simulator_result["Interference_values_UMi"] = I_N_UMi_W.tolist()
 
     # TODO NEED TO RECHECK THE VALUES
     with open(saved_tp_file, "wb") as f:
