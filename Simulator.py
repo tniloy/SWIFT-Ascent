@@ -1861,10 +1861,10 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
         ax.boxplot([I_N for I_N, los in box_dict_UMi[key]],
                    patch_artist=True,
                    positions=[i],
-                   boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'),
-                   medianprops=dict(color='black', linewidth=2),
-                   whiskerprops=dict(color='black', linewidth=2),
-                   capprops=dict(color='black', linewidth=2))
+                   boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'))
+                   # medianprops=dict(color='black', linewidth=2),
+                   # whiskerprops=dict(color='black', linewidth=2),
+                   # capprops=dict(color='black', linewidth=2))
     custom_lines = [Line2D([0], [0], color='blue', lw=2),
                     Line2D([0], [0], color='red', lw=2),
                     Line2D([0], [0], color='green', linestyle='--', lw=2),

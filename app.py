@@ -76,7 +76,7 @@ while True:
         break
 
     # Plot the stations on a map
-    plot_stations(lat_FSS, lon_FSS, base_stations)
+    plot_stations(lat_FSS, lon_FSS, base_stations, simulator_response.json()['Interference_values_UMi_each_Bs'])
     # Plot the graph on a map
     plot_graph(html_image)
     script_dir = os.path.dirname(os.path.abspath(__file__))
