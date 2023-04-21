@@ -13,11 +13,7 @@ def plot_graph(img_src):
     # Create the HTML content
     html_content = f"""<!DOCTYPE html>
     <html>
-    <head>
-        <title>Graph Plot</title>
-    </head>
     <body>
-        <h1>Graph Plot</h1>
         {img_src}
     </body>
     </html>"""

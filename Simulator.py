@@ -1,7 +1,17 @@
+"""
+Simulator REST API for CCI-SWIFT ASCENT
+
+Created: Jan 29, 2023
+Author/s: Rishabh Rastogi (rrishabh@vt.edu), Ta Seen Reaz Niloy (tniloy@gmu.edu)
+Advised by Dr. Eric Burger (ewburger@vt.edu) and Dr. Vijay K Shah (vshah22@gmu.edu)
+For SWIFT-ASCENT
+"""
+
 #!/usr/bin/env python
 import cmath
 import json
 import math
+import os
 import pickle
 import random
 from pathlib import Path
@@ -32,6 +42,18 @@ def get_weather_json(latitude, longitude):
         return weather_info
     else:
         print('Could not retrieve weather information for the given location')
+
+
+def get_exclusion_zone_x_parameter(keys, x_pos_real):
+    for i, key in enumerate(keys):
+        if key > x_pos_real:
+            if i == 0:
+                return -1
+            else:
+                return i-0.5
+        elif key == x_pos_real:
+            return i
+    return len(keys)+1
 
 
 def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
@@ -1223,9 +1245,6 @@ def parse_simulator_data():
     json_data = request.get_json()
 
     # Parse the JSON data to variables
-    # fss_pos = json_data['fss_pos']
-    # mbs_pos = json_data['mbs_pos']  #mbs position not required to send. It is doing nothing.
-    # building_locs = json_data['building_locs']
     lat_FSS = json_data['lat_FSS']
     lon_FSS = json_data['lon_FSS']
     radius = json_data['radius']
@@ -1339,25 +1358,6 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     if saved_los_file.is_file():
         with open(saved_los_file, "rb") as f:
             saved_los = pickle.load(f)
-    # data = pd.read_csv(
-    #     "310.csv",
-    #     names=[
-    #         "radio",
-    #         "mcc",
-    #         "mnc",
-    #         "lac",
-    #         "cid",
-    #         "unit",
-    #         "longitude",
-    #         "latitude",
-    #         "range",
-    #         "samples",
-    #         "changeable",
-    #         "created",
-    #         "updated",
-    #         "averageSignal",
-    #     ],
-    # )
     data_within_zone= pd.DataFrame(base_stations)
     data_within_zone.head(10)
     # lat_FSS = 37.20250
@@ -1415,14 +1415,29 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # htmlpolygon = get_plot()
     # simulator_result["html_polygon_3D"] = htmlpolygon
 
+    # buildings = []
+    # for i in tqdm(range(len(data1))):
+    #     for coords in data1.iloc[i]["geometry.coordinates"]:
+    #         try:
+    #             buildings.append(Building(coords, data1.iloc[i]["properties.height"], lat_FSS, lon_FSS))
+    #             print(f"created building {i}")
+    #         except:
+    #             print(f"Skipping building {i}")
+
     buildings = []
-    for i in tqdm(range(len(data1))):
-        for coords in data1.iloc[i]["geometry.coordinates"]:
-            try:
-                buildings.append(Building(coords, data1.iloc[i]["properties.height"], lat_FSS, lon_FSS))
-                print(f"created building {i}")
-            except:
-                print(f"Skipping building {i}")
+    if os.path.isfile("buildings.pkl"):
+        with open('buildings.pkl', 'rb') as file:
+            buildings = pickle.load(file)
+    else:
+        for i in tqdm(range(len(data1))):
+            for coords in data1.iloc[i]["geometry.coordinates"]:
+                try:
+                    buildings.append(Building(coords, data1.iloc[i]["properties.height"], lat_FSS, lon_FSS))
+                    print(f"created building {i}")
+                except:
+                    print(f"Skipping building {i}")
+        with open("buildings.pkl", "wb") as file:
+            pickle.dump(buildings, file)
 
     ctx.buildings = buildings
     ctx.saved_los = saved_los
@@ -1436,15 +1451,10 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     print("Noise:", Noise)
     print("Noise in Watts:", Noise_W)
 
-    # bs_ue_max_radius = 1000
-    # bs_ue_min_radius = 1
-    # base_station_count = 33
-
     ctx.base_station_count = base_station_count
     ctx.bs_ue_min_radius = bs_ue_min_radius
     ctx.bs_ue_max_radius = bs_ue_max_radius
     ctx.Noise_W = Noise_W
-    # fss1 = BS(radius, max_height=1.5, carr_freq=12e3, interference_type=None)
     x, y, z = 0, 0, 4.5
     ctx.x = x
     ctx.y = y
@@ -1833,6 +1843,7 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # Creating dataset
 
     #
+
     box_dict_UMi = dict()
     distance, interface_Noise = pairs_noAverage["UMi"]
     for i in range(len(interface_Noise)):
@@ -1846,34 +1857,32 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     if rain:
         threshold = -12
     for i, key in enumerate(keys):
-        # key is distance
-        # print(key)
-        # print(box_dict_UMi[key])
         line_of_sight1 = box_dict_UMi[key][0][1]
         ax.boxplot([I_N for I_N, los in box_dict_UMi[key]],
                    patch_artist=True,
                    positions=[i],
-                   boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'))
-    custom_lines = [Line2D([0], [0], color='blue', lw=6),
-                    Line2D([0], [0], color='red', lw=6),
-                    Line2D([0], [0], color='green', linestyle='--', lw=6),
-                    Line2D([0], [0], color='black', linestyle='--', lw=6)]
-    ax.legend(custom_lines, ['LOS', 'NLOS', 'Exclusion Zone {}'.format(exclusion_zone_radius), 'Threshold {}'.format(threshold)], fontsize=25)
-    ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=30)
-    ax.tick_params(axis='y', which='major', labelsize=30)
-    ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=40)
-    plt.axhline(y= threshold, color='black', linestyle='--', label='Threshold {}'.format(threshold))
-    plt.axvline(x=exclusion_zone_radius, color='green', linestyle='--', label='Exclusion Zone {}'.format(exclusion_zone_radius))
-    ax.set_ylabel('I/N (dB)', fontsize=40)
-    fig.set_size_inches(40, 10)
+                   boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'),
+                   medianprops=dict(color='black', linewidth=2),
+                   whiskerprops=dict(color='black', linewidth=2),
+                   capprops=dict(color='black', linewidth=2))
+    custom_lines = [Line2D([0], [0], color='blue', lw=2),
+                    Line2D([0], [0], color='red', lw=2),
+                    Line2D([0], [0], color='green', linestyle='--', lw=2),
+                    Line2D([0], [0], color='black', linestyle='--', lw=2)]
+    ax.legend(custom_lines, ['LOS', 'NLOS', 'Exclusion Zone {}'.format(exclusion_zone_radius), 'Threshold {}'.format(threshold)], fontsize=8)
+    ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=10)
+    ax.tick_params(axis='y', which='major', labelsize=10)
+    ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=10)
+    plt.axhline(y=threshold, color='black', linestyle='--', label='Threshold {}'.format(threshold))
+    plt.axvline(x=get_exclusion_zone_x_parameter(keys, exclusion_zone_radius), color='green', linestyle='--', label='Exclusion Zone {}'.format(exclusion_zone_radius))
+    ax.set_ylabel('I/N (dB)', fontsize=10)
+    fig.set_size_inches(12, 4)
     plt.tight_layout()
-    # plt.switch_backend('TkAgg')
     # show plot
     html12 = get_plot()
     simulator_result["html_Interference_Noise"] = html12
     # TODO need to add a horizontal and vertical line for (Exz and I/N threshold)
     #TODO can use the distance from the dataset no need to calculate
-    print(html12)
 
     # # plt.show()
     # Elevation angles (FSS towards to sky )

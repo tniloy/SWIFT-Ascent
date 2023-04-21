@@ -4,13 +4,22 @@
 	<title>Simulation Result</title>
 	<style>
 		.container {
-			display: flex;
+			position: relative;
+			width: 100%;
+			height: 100vh;
 		}
 		iframe {
-			width: 50%;
-			height: 100vh;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 50%;
 			border: none;
 		}
+		iframe:last-child {
+			top: 50%;
+		}
+
 	</style>
 </head>
 <body>
