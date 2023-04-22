@@ -27,11 +27,25 @@ def plot_stations(lat_FSS, lon_FSS, base_stations, inr_each_bs):
 
     for idx, base in enumerate(base_stations):
         bucket_match = int(math.ceil(inr_each_bs[idx]-min_inr_each_bs)/bucket_size)
+        if bucket_match > buckets:
+            bucket_match = buckets
+
         if base['status'] == 1:
-            gmap.marker(base['latitude'], base['longitude'], color='green', title=f"BS | INR: {round(inr_each_bs[idx], 2)}, Status: Active", label='B')
-            print(bucket_match, bucket_match % buckets)
-            gmap.circle(base['latitude'], base['longitude'], radius=inr_each_bs[idx]*15, color=color_palette[bucket_match % buckets])
-            # gmap.scatter(base['latitude'], base['longitude'], color=color_palette[bucket_match % buckets], colorbar=True)
+            inr = inr_each_bs[idx]
+            normalized_inr = round(abs((inr - min_inr_each_bs)/(max_inr_each_bs - min_inr_each_bs)) * 100, 2)
+
+            gmap.marker(
+                base['latitude'], base['longitude'], color='green', title=f"BS | INR: {round(inr, 2)}, Status: Active",
+                label='B'
+            )
+            gmap.circle(
+                base['latitude'], base['longitude'], radius=normalized_inr * 10,
+                color=color_palette[bucket_match % buckets]
+            )
+
+            # gmap.scatter(
+            #     base['latitude'], base['longitude'], color=color_palette[bucket_match % buckets], colorbar=True
+            # )
             # gmap.text(37.793575, -122.464334, 'Presidio')
             # gmap.text(37.766942, -122.441472, 'Buena Vista Park', color='blue')
         else:

@@ -9,11 +9,14 @@ For SWIFT-ASCENT
 
 import json
 import requests
-from flask import app
+# from flask import app
 from plot_stations import plot_stations
 from show_graph import plot_graph
 import webbrowser
 import os
+import warnings
+
+warnings.filterwarnings("ignore")
 
 # URL of the DSA Framework web service
 dsa_input_url = "https://localhost:8000/getSimulatorInput"
@@ -31,7 +34,7 @@ headers = {'Content-type': 'application/json'}
 counter = 0
 
 while True:
-    counter = counter+1
+    counter = counter + 1
     if counter > 2:
         print("Exiting the loop.")
         break
@@ -96,8 +99,8 @@ while True:
         break
 
 
-if __name__ == '__main__':
-    # Use a self-signed certificate for testing purposes
-    context = ('cert.pem', 'key.pem')
-    app.run(host='0.0.0.0', port=6000, debug=True, ssl_context=context)
+# if __name__ == '__main__':
+#     # Use a self-signed certificate for testing purposes
+#     context = ('cert.pem', 'key.pem')
+#     app.run(host='0.0.0.0', port=6000, debug=True, ssl_context=context)
 

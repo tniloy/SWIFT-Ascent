@@ -7,7 +7,7 @@ Advised by Dr. Eric Burger (ewburger@vt.edu) and Dr. Vijay K Shah (vshah22@gmu.e
 For SWIFT-ASCENT
 """
 
-#!/usr/bin/env python
+# !/usr/bin/env python
 import cmath
 import json
 import math
@@ -29,7 +29,10 @@ from scipy import optimize
 from shapely import geometry
 from tqdm import tqdm
 from weather import get_weather
+import warnings
+from matplotlib.offsetbox import AnchoredText
 
+warnings.filterwarnings("ignore")
 matplotlib.use('Agg')
 
 
@@ -50,10 +53,10 @@ def get_exclusion_zone_x_parameter(keys, x_pos_real):
             if i == 0:
                 return -1
             else:
-                return i-0.5
+                return i - 0.5
         elif key == x_pos_real:
             return i
-    return len(keys)+1
+    return len(keys) + 1
 
 
 def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
@@ -137,9 +140,9 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
 
     for i in tqdm(range(len(buildings))):
         for polygon in buildings[i].wall_polygons:
-            coordinates = ((BS_X, BS_Y, BS_Z), (FSS_X, FSS_Y, FSS_Z), *[(p.x,p.y,p.z) for p in polygon.points])
-            #polygon_hash = hash(polygon)
-            #if (bs_to_fss_segment_hash, polygon_hash) in saved_los:
+            coordinates = ((BS_X, BS_Y, BS_Z), (FSS_X, FSS_Y, FSS_Z), *[(p.x, p.y, p.z) for p in polygon.points])
+            # polygon_hash = hash(polygon)
+            # if (bs_to_fss_segment_hash, polygon_hash) in saved_los:
             if coordinates in saved_los:
                 if saved_los.get(coordinates):
                     path_loss_UMi = PLUMiNLOS
@@ -148,8 +151,8 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
                     path_loss_UMi = PLUMiLOS
             else:
                 bs_to_fss_segment = Segment(Point(BS_X, BS_Y, BS_Z), Point(FSS_X, FSS_Y, FSS_Z))
-                #bs_to_fss_segment_hash = hash(bs_to_fss_segment)
-                #polygon_hash = hash(polygon)
+                # bs_to_fss_segment_hash = hash(bs_to_fss_segment)
+                # polygon_hash = hash(polygon)
                 if intersection(bs_to_fss_segment, polygon) is not None:
                     path_loss_UMi = PLUMiNLOS
                     line_of_sight = False
@@ -181,8 +184,7 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
     #             #                 line_of_sight = True
     #             saved_los[(hash(bs_to_fss_segment), hash(polygon))] = False
 
-
-    #realisticpathlossmodified
+    # realisticpathlossmodified
     # bs_to_fss_segment = Segment(Point(BS_X, BS_Y, BS_Z), Point(FSS_X, FSS_Y, FSS_Z))
     # bs_to_fss_segment_hash = hash(bs_to_fss_segment)
     #
@@ -203,7 +205,6 @@ def path_loss_UMi(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
     #     else:
     #         path_loss_UMi = PLUMiLOS
     #         saved_los[(bs_to_fss_segment_hash, polygon_hash)] = False
-
 
     return path_loss_UMi, d_2D, line_of_sight, saved_los
 
@@ -295,8 +296,6 @@ def path_loss_UMa(BS_X, BS_Y, BS_Z, FSS_X, FSS_Y, FSS_Z, ctx):
 
     ##NLOS,SF=7.8 (optional)
     ##PL_Optional=32.4+20*math.log(fc)+30*math.log(d_3D)
-
-
 
     ##Loss Probability:
     #     if d_2D >18:
@@ -618,7 +617,7 @@ def simulate(output=True, ctx=None):
         x_BS = R * math.cos(math.radians(lat_BS)) * math.cos(math.radians(lon_BS))
         y_BS = R * math.cos(math.radians(lat_BS)) * math.sin(math.radians(lon_BS))
         #         z_BS = R * math.sin(math.radians(lat_BS))
-        z_BS= 10
+        z_BS = 10
 
         x_FSS = ctx.x_FSS
         y_FSS = ctx.y_FSS
@@ -628,7 +627,8 @@ def simulate(output=True, ctx=None):
         BS_X = np.append(BS_X, x_BS - x_FSS)
         BS_Y = np.append(BS_Y, y_BS - y_FSS)
         BS_Z = np.append(BS_Z, 10)
-        if output: print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
+        if output:
+            print("Bs Co-ordinates=" + str(x_BS) + "," + str(y_BS) + "," + str(z_BS))
 
     if output:
         print(BS_X, BS_Y, BS_Z)
@@ -697,6 +697,7 @@ def simulate(output=True, ctx=None):
             pathlossumi, distance, los_single, ctx.saved_los = path_loss_UMi(
                 BS_X[i], BS_Y[i], 10, FSS_X[j], FSS_Y[j], 4.5, ctx
             )
+            distance = data_within_zone.iloc[i]["dist_from_FSS"]
             pathlossuma = []
             pathlossrma = []
             # pathlossuma, distance, los_single = path_loss_UMa(
@@ -741,9 +742,10 @@ def simulate(output=True, ctx=None):
         interface_UMa_BS = np.empty([0])
         interface_RMa_BS = np.empty([0])
         for j in range(len(FSS_X)):
-            if output: print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i * len(FSS_X) + j]}")
+            if output:
+                print(f"BS {i}, FSS {j}, pathloss {pathloss_UMi[i * len(FSS_X) + j]}")
             for k in random.sample(range(len(UE_X)), 30):
-                print(f"UE{k}")
+                # print(f"UE{k}")
                 # channel check
                 # if UE is using channel 1, the start is 12.2GHz and the end is 12.3GHz
                 bs_channel_start, bs_channel_end = BS_Channels.getChannelRange(
@@ -790,7 +792,8 @@ def simulate(output=True, ctx=None):
 
                     theta_bs_ue = np.degrees(theta_bs_ue) % 360
                     phi_bs_ue = np.degrees(phi_bs_ue) % 360
-                    if output: print("theta_bs_ue:", theta_bs_ue, "phi_bs_ue:", phi_bs_ue)
+                    if output:
+                        print("theta_bs_ue:", theta_bs_ue, "phi_bs_ue:", phi_bs_ue)
 
                     theta_tilt, phi_scan = max_gain_5g_parameters(
                         theta_bs_ue, phi_bs_ue, ctx
@@ -1273,7 +1276,8 @@ def parse_simulator_data():
             'status': bs_data['status'],
             'unique_id': bs_data['unique_id'],
             'unit': bs_data['unit'],
-            'updated': bs_data['updated']
+            'updated': bs_data['updated'],
+            'dist_from_FSS': bs_data['dist_from_FSS']
         }
         base_stations.append(base_station)
 
@@ -1358,8 +1362,8 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     if saved_los_file.is_file():
         with open(saved_los_file, "rb") as f:
             saved_los = pickle.load(f)
-    data_within_zone= pd.DataFrame(base_stations)
-    data_within_zone.head(10)
+    data_within_zone = pd.DataFrame(base_stations)
+    # data_within_zone.head(10)
     # lat_FSS = 37.20250
     # lon_FSS = -80.43444
     R = 6.371e6  # Radius of the earth
@@ -1397,7 +1401,7 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # data1[data1["properties.height"].notnull()].head(20)
     # data1["geometry.coordinates"].head(10)
 
-    #for demo we are not showing the polygon
+    # for demo we are not showing the polygon
     # b = Building(
     #     data1.iloc[500]["geometry.coordinates"][0], data1.iloc[500]["properties.height"], lat_FSS, lon_FSS
     # )
@@ -1539,7 +1543,6 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     with open(saved_los_file, "wb") as f:
         pickle.dump(saved_los, f)
 
-
     # len(pairs_noAverage["RMa"][0])
     #
     # len(pairs_noAverage["RMa"][1])
@@ -1625,7 +1628,6 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
     # plt.legend()
     # html7 = get_plot()
     # plt.show()
-
 
     # not showing the geograph in the demo
     # output = False
@@ -1862,27 +1864,40 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
                    patch_artist=True,
                    positions=[i],
                    boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'))
-                   # medianprops=dict(color='black', linewidth=2),
-                   # whiskerprops=dict(color='black', linewidth=2),
-                   # capprops=dict(color='black', linewidth=2))
+        # medianprops=dict(color='black', linewidth=2),
+        # whiskerprops=dict(color='black', linewidth=2),
+        # capprops=dict(color='black', linewidth=2))
     custom_lines = [Line2D([0], [0], color='blue', lw=2),
                     Line2D([0], [0], color='red', lw=2),
                     Line2D([0], [0], color='green', linestyle='--', lw=2),
                     Line2D([0], [0], color='black', linestyle='--', lw=2)]
-    ax.legend(custom_lines, ['LOS', 'NLOS', 'Exclusion Zone {}'.format(exclusion_zone_radius), 'Threshold {}'.format(threshold)], fontsize=8)
+    ax.legend(custom_lines,
+              ['LOS', 'NLOS', 'Exclusion Zone ({}m)'.format(exclusion_zone_radius),
+               'Threshold ({}dB)'.format(threshold)],
+              fontsize=8, loc='upper center', bbox_to_anchor=(0.5, 1.05),
+              ncol=4, fancybox=True, shadow=True)
     ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=10)
     ax.tick_params(axis='y', which='major', labelsize=10)
     ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=10)
     plt.axhline(y=threshold, color='black', linestyle='--', label='Threshold {}'.format(threshold))
-    plt.axvline(x=get_exclusion_zone_x_parameter(keys, exclusion_zone_radius), color='green', linestyle='--', label='Exclusion Zone {}'.format(exclusion_zone_radius))
+    plt.axvline(x=get_exclusion_zone_x_parameter(keys, exclusion_zone_radius), color='green',
+                linestyle='--', label='Exclusion Zone {}'.format(exclusion_zone_radius))
     ax.set_ylabel('I/N (dB)', fontsize=10)
     fig.set_size_inches(12, 4)
     plt.tight_layout()
+    if rain:
+        weather = "Rainy"
+    else:
+        weather = "Normal"
+    text = f"Weather: {weather}\nNo. Of BS: {len(distance)}"
+    anchored_text = AnchoredText(text, loc=1)
+    ax.add_artist(anchored_text)
+
     # show plot
     html12 = get_plot()
     simulator_result["html_Interference_Noise"] = html12
     # TODO need to add a horizontal and vertical line for (Exz and I/N threshold)
-    #TODO can use the distance from the dataset no need to calculate
+    # TODO can use the distance from the dataset no need to calculate
 
     # # plt.show()
     # Elevation angles (FSS towards to sky )
