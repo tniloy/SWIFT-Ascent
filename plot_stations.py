@@ -4,11 +4,21 @@ import numpy as np
 import math
 
 
-def plot_stations(lat_FSS, lon_FSS, base_stations, inr_each_bs):
+def plot_stations(lat_FSS, lon_FSS, rain, base_stations, inr_each_bs):
     # gmap = gmplot.GoogleMapPlotter.from_geocode("USA", apikey="AIzaSyC4BI4H4SCVgA2nGASWUlGPpJS4f-jPjgw")
     center_lat = np.mean(lat_FSS)
     center_long = np.mean(lon_FSS)
     gmap = gmplot.GoogleMapPlotter(center_lat, center_long, 13, apikey="AIzaSyC4BI4H4SCVgA2nGASWUlGPpJS4f-jPjgw")
+    if rain:
+        weather_url = 'https://friendlystock.com/wp-content/uploads/2021/07/4-weather-emoji-rainy-cartoon-clipart.jpg'
+    else:
+        weather_url = 'https://friendlystock.com/wp-content/uploads/2021/07/1-weather-emoji-sunny-cartoon-clipart.jpg'
+
+    bounds = {'north': 37.21933173298058, 'south': 37.19933173298058, 'east': -80.50983898577554, 'west': -80.52983898577554}
+    gmap.ground_overlay(weather_url, bounds, opacity=0.8)
+
+
+
     buckets = 5
     # https://coolors.co/palette/03071e-370617-6a040f-9d0208-d00000-dc2f02-e85d04-f48c06-faa307-ffba08
     color_palette = ['#FFBA08', '#F48C06', '#DC2F02', '#9D0208', '#370617']

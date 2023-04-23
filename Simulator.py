@@ -1363,9 +1363,6 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
         with open(saved_los_file, "rb") as f:
             saved_los = pickle.load(f)
     data_within_zone = pd.DataFrame(base_stations)
-    # data_within_zone.head(10)
-    # lat_FSS = 37.20250
-    # lon_FSS = -80.43444
     R = 6.371e6  # Radius of the earth
 
     x_FSS = R * math.cos(math.radians(lat_FSS)) * math.cos(math.radians(lon_FSS))
@@ -1852,21 +1849,32 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
         if distance[i] not in box_dict_UMi:
             box_dict_UMi[distance[i]] = []
         box_dict_UMi[distance[i]].append([interface_Noise[i], line_of_sight[i]])
+
+    # with open('temp\\data.pkl', 'wb') as f:
+    #     pickle.dump(box_dict_UMi, f)
+
     fig, ax = plt.subplots()
     # Creating plot
     keys = sorted([key for key in box_dict_UMi])
     threshold = -8.5
     if rain:
         threshold = -12
+
+    x_axis, y_axis, colour = [], [], []
     for i, key in enumerate(keys):
+
+        INR_val_bs = box_dict_UMi[key][0][0]
         line_of_sight1 = box_dict_UMi[key][0][1]
-        ax.boxplot([I_N for I_N, los in box_dict_UMi[key]],
-                   patch_artist=True,
-                   positions=[i],
-                   boxprops=dict(facecolor='white', color='blue' if line_of_sight1 else 'red'))
-        # medianprops=dict(color='black', linewidth=2),
-        # whiskerprops=dict(color='black', linewidth=2),
-        # capprops=dict(color='black', linewidth=2))
+        x_axis.append(key)
+        y_axis.append(INR_val_bs)
+        if line_of_sight1 == 1.0:
+            color = 'blue'
+        else:
+            color = 'red'
+        colour.append(color)
+
+    plt.scatter(x_axis, y_axis, c=colour)
+
     custom_lines = [Line2D([0], [0], color='blue', lw=2),
                     Line2D([0], [0], color='red', lw=2),
                     Line2D([0], [0], color='green', linestyle='--', lw=2),
@@ -1875,23 +1883,16 @@ def run_simulator(lat_FSS, lon_FSS, radius, simulation_count, bs_ue_max_radius, 
               ['LOS', 'NLOS', 'Exclusion Zone ({}m)'.format(exclusion_zone_radius),
                'Threshold ({}dB)'.format(threshold)],
               fontsize=8, loc='upper center', bbox_to_anchor=(0.5, 1.05),
-              ncol=4, fancybox=True, shadow=True)
-    ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=10)
-    ax.tick_params(axis='y', which='major', labelsize=10)
+              ncol=2, fancybox=True, shadow=True)
+    # ax.set_xticklabels([int(key) if not i % 4 else "" for i, key in enumerate(keys)], fontsize=10)
+    # ax.tick_params(axis='y', which='major', labelsize=10)
     ax.set_xlabel('Distance of Each BS From FSS (meters)', fontsize=10)
     plt.axhline(y=threshold, color='black', linestyle='--', label='Threshold {}'.format(threshold))
-    plt.axvline(x=get_exclusion_zone_x_parameter(keys, exclusion_zone_radius), color='green',
+    plt.axvline(x=exclusion_zone_radius, color='green',
                 linestyle='--', label='Exclusion Zone {}'.format(exclusion_zone_radius))
     ax.set_ylabel('I/N (dB)', fontsize=10)
     fig.set_size_inches(12, 4)
     plt.tight_layout()
-    if rain:
-        weather = "Rainy"
-    else:
-        weather = "Normal"
-    text = f"Weather: {weather}\nNo. Of BS: {len(distance)}"
-    anchored_text = AnchoredText(text, loc=1)
-    ax.add_artist(anchored_text)
 
     # show plot
     html12 = get_plot()
