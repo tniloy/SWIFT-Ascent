@@ -8,7 +8,7 @@ def plot_stations(lat_FSS, lon_FSS, rain, base_stations, inr_each_bs):
     # gmap = gmplot.GoogleMapPlotter.from_geocode("USA", apikey="AIzaSyC4BI4H4SCVgA2nGASWUlGPpJS4f-jPjgw")
     center_lat = np.mean(lat_FSS)
     center_long = np.mean(lon_FSS)
-    gmap = gmplot.GoogleMapPlotter(center_lat, center_long, 13, apikey="AIzaSyC4BI4H4SCVgA2nGASWUlGPpJS4f-jPjgw")
+    gmap = gmplot.GoogleMapPlotter(center_lat, center_long, 13, apikey="AIzaSyC4BI4H4SCVgA2nGASWUlGPpJS4f-jPjgw", map_type='satellite')
     if rain:
         weather_url = 'https://friendlystock.com/wp-content/uploads/2021/07/4-weather-emoji-rainy-cartoon-clipart.jpg'
     else:
@@ -37,8 +37,8 @@ def plot_stations(lat_FSS, lon_FSS, rain, base_stations, inr_each_bs):
 
     for idx, base in enumerate(base_stations):
         bucket_match = int(math.ceil(inr_each_bs[idx]-min_inr_each_bs)/bucket_size)
-        if bucket_match > buckets:
-            bucket_match = buckets
+        if bucket_match >= buckets:
+            bucket_match = buckets-1
 
         if base['status'] == 1:
             inr = inr_each_bs[idx]
@@ -50,7 +50,7 @@ def plot_stations(lat_FSS, lon_FSS, rain, base_stations, inr_each_bs):
             )
             gmap.circle(
                 base['latitude'], base['longitude'], radius=normalized_inr * 10,
-                color=color_palette[bucket_match % buckets]
+                color=color_palette[bucket_match]
             )
 
             # gmap.scatter(

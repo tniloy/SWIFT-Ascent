@@ -33,7 +33,7 @@ counter = 0
 
 while True:
     counter = counter + 1
-    if counter > 3:
+    if counter > 2:
         print("Exiting the loop.\n")
         break
 
@@ -47,15 +47,22 @@ while True:
         Send a GET request to the DSA Framework web service
     """
 
-    print("\n\nSWIFT ASCENT Run {}\n".format(counter))
+    print("\n")
+    print("-----------------------------------------------------------------------------------------------------------")
+    print("SWIFT ASCENT Run {}".format(counter))
+    print("-----------------------------------------------------------------------------------------------------------")
+    print("\n")
+    print("Fetching input for Interference Analysis tool from DSA framework.")
     dsa_get_response = requests.get(dsa_input_url, verify=False)
     if dsa_get_response.status_code == 200:
-        print("DSA data successfully fetched.")
+        print("Input data successfully fetched.")
         radius = dsa_get_response.json()['radius']
         bs_ue_max_radius = dsa_get_response.json()['bs_ue_max_radius']
         exclusion_zone_radius = dsa_get_response.json()['exclusion_zone_radius']
         rain_rate = dsa_get_response.json()['rain_rate']
-        print("Context from DSA: Weather Context: {}, FSS radius={}, base station max radius: {}".format("Rainy, with rain rate of {} mm/hr".format(rain_rate) if rain else "Sunny", radius, bs_ue_max_radius))
+        print("Context from DSA: Weather Context= {}, Inclusion Zone Radius= {}m, Current Exclusion Zone Radius= {}m, "
+              "Base Station Max Radius: {}m\n".format("Rainy, with rain rate of {}mm/hr".format(26.43) if rain else "Sunny",
+                                      radius, exclusion_zone_radius, bs_ue_max_radius))
     else:
         print("DSA data could not be fetched.")
         break
@@ -85,20 +92,21 @@ while True:
     """
 
     # simulator_api_data = dsa_data_json
-    print("Trying to feed data from DSA in Simulator....")
+    print("\nSending data from DSA framework to Interference Analysis tool.")
     simulator_response = requests.post(simulator_api_url, data=dsa_get_response, headers=headers, verify=False)
     html_image = ""
 
     if simulator_response.status_code == 200:
-        print("DSA data submitted successfully to simulator.")
+        print("Interference values returned by Interference Analysis tool.\n")
+        # print("DSA data submitted successfully to simulator.")
         # print(simulator_response.content)
         html_image = simulator_response.json()['html_Interference_Noise']
     else:
-        print("DSA data could not be submitted successfully to simulator.")
+        print("Interference Analysis tool run failed.")
         break
 
     # Plot the stations on a map
-    print("Plotting output from Simulator...")
+    print("Plotting results obtained from Interference Analysis tool.")
     plot_stations(lat_FSS, lon_FSS, rain, base_stations, simulator_response.json()['Interference_values_UMi_each_Bs'])
     # Plot the graph on a map
     plot_graph(html_image)
@@ -106,16 +114,19 @@ while True:
     html_file_path = "Results.html"
     save_path = os.path.join(script_dir, html_file_path)
     # Open the file in the default web browser
+    print("Opening browser to display results obtained from Interference Analysis tool.")
     webbrowser.open('file://' + save_path)
 
     # Send feedback to the DSA
+    print("\nSending feedback from Interference Analysis tool to DSA framework.")
     feedback_response = requests.post(dsa_feedback_url, data=json.dumps(simulator_response.json()), headers=headers, verify=False)
     # Check the response
     if feedback_response.status_code == 200:
-        print("Feedback from Simulator submitted successfully back to DSA.")
-        print("Output for run no. {} of Swift Framework: {}".format(counter, feedback_response.json()['message']))
+        print("Dynamic Context-Aware decision values returned by DSA framework.")
+        print("\nCurrent Exclusion Zone Radius= {}m".format(exclusion_zone_radius))
+        print("Response from DSA framework after run no. {} is:\n{}".format(counter, feedback_response.json()['message']))
     else:
-        print("Failed to submit feedback to DSA.")
+        print("Failed to submit feedback to DSA framework.")
         break
 
 
